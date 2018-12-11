@@ -1,8 +1,27 @@
+<!--
+ Tencent is pleased to support the open source community by making QMUI_Android available.
+
+ Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+
+ Licensed under the MIT License (the "License"); you may not use this file except in
+ compliance with the License. You may obtain a copy of the License at
+
+ http://opensource.org/licenses/MIT
+
+ Unless required by applicable law or agreed to in writing, software distributed under the License is
+ distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ either express or implied. See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
 <resources>
 
     <!-- common -->
     <string name="app_name">QMUI</string>
     <string name="common_example">示例图片</string>
+    <string name="app_upgrade_tip_title">Release Notes (%1$s)</string>
+    <string name="ok">OK</string>
+    <string name="cancel">CANCEL</string>
 
     <!-- Components 系列界面 -->
 
@@ -73,9 +92,9 @@
     <string name="spanTouchFix_qmui_fix_behavior">QMUI修复后行为</string>
 
     <!-- PullRefreshView -->
-    <string name="pull_refresh_default_offset_calculator">默认效果: RefreshView 下拉到一定距离后不动</string>
-    <string name="pull_refresh_follow_offset_calculator">RefreshView 一直跟随下拉的效果</string>
-    <string name="pull_refresh_center_gravity_offset_calculator">RefreshView 处于下拉区域的中间的效果</string>
+    <string name="pull_refresh_default_offset_calculator">默认效果: ListView 下拉到一定距离后不动</string>
+    <string name="pull_refresh_follow_offset_calculator">ListView 一直跟随下拉的效果</string>
+    <string name="pull_refresh_center_gravity_offset_calculator">ListView 处于下拉区域的中间的效果</string>
 
 
     <string name="system_behavior_1">\@qmui:点击span区域会同时出发span的点击事件和 TextView 的点击事件 #qmui#</string>

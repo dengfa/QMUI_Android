@@ -1,4 +1,20 @@
 /*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,12 +64,14 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.WindowInsets;
 import android.widget.FrameLayout;
 
 import com.qmuiteam.qmui.QMUIInterpolatorStaticHolder;
 import com.qmuiteam.qmui.R;
 import com.qmuiteam.qmui.util.QMUICollapsingTextHelper;
 import com.qmuiteam.qmui.util.QMUILangHelper;
+import com.qmuiteam.qmui.util.QMUINotchHelper;
 import com.qmuiteam.qmui.util.QMUIViewHelper;
 import com.qmuiteam.qmui.util.QMUIViewOffsetHelper;
 
@@ -100,8 +118,7 @@ public class QMUICollapsingTopBarLayout extends FrameLayout implements IWindowIn
 
     int mCurrentOffset;
 
-    WindowInsetsCompat mLastInsets;
-    Rect mLastInsetRect;
+    Object mLastInsets;
 
     public QMUICollapsingTopBarLayout(Context context) {
         this(context, null);
@@ -264,10 +281,11 @@ public class QMUICollapsingTopBarLayout extends FrameLayout implements IWindowIn
 
     private int getWindowInsetTop() {
         if (mLastInsets != null) {
-            return mLastInsets.getSystemWindowInsetTop();
-        }
-        if (mLastInsetRect != null) {
-            return mLastInsetRect.top;
+            if(mLastInsets instanceof WindowInsetsCompat){
+                return ((WindowInsetsCompat) mLastInsets).getSystemWindowInsetTop();
+            }else if(mLastInsets instanceof Rect){
+                return ((Rect) mLastInsets).top;
+            }
         }
         return 0;
     }
@@ -356,7 +374,7 @@ public class QMUICollapsingTopBarLayout extends FrameLayout implements IWindowIn
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        if (mLastInsets != null || mLastInsetRect != null) {
+        if (mLastInsets != null) {
             // Shift down any views which are not set to fit system windows
             final int insetTop = getWindowInsetTop();
             for (int i = 0, z = getChildCount(); i < z; i++) {
@@ -1039,7 +1057,7 @@ public class QMUICollapsingTopBarLayout extends FrameLayout implements IWindowIn
 
         // If our insets have changed, keep them and invalidate the scroll ranges...
         if (!QMUILangHelper.objectEquals(mLastInsets, newInsets)) {
-            mLastInsetRect = newInsets;
+            mLastInsets = newInsets;
             requestLayout();
         }
 
@@ -1049,9 +1067,8 @@ public class QMUICollapsingTopBarLayout extends FrameLayout implements IWindowIn
     }
 
     @Override
-    public boolean applySystemWindowInsets21(WindowInsetsCompat insets) {
-        WindowInsetsCompat newInsets = null;
-
+    public boolean applySystemWindowInsets21(Object insets) {
+        Object newInsets = null;
         if (ViewCompat.getFitsSystemWindows(this)) {
             // If we're set to fit system windows, keep the insets
             newInsets = insets;

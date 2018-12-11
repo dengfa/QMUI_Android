@@ -1,3 +1,19 @@
+/*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qmuiteam.qmui.widget.grouplist;
 
 
@@ -8,7 +24,9 @@ import android.support.annotation.IntDef;
 import android.util.AttributeSet;
 import android.util.SparseArray;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.qmuiteam.qmui.util.QMUIViewHelper;
 import com.qmuiteam.qmui.R;
@@ -212,6 +230,8 @@ public class QMUIGroupListView extends LinearLayout {
         private int mSeparatorDrawableForTop = 0;
         private int mSeparatorDrawableForBottom = 0;
         private int mSeparatorDrawableForMiddle = 0;
+        private int mLeftIconWidth = ViewGroup.LayoutParams.WRAP_CONTENT;
+        private int mLeftIconHeight = ViewGroup.LayoutParams.WRAP_CONTENT;
 
         public Section(Context context) {
             mContext = context;
@@ -301,6 +321,12 @@ public class QMUIGroupListView extends LinearLayout {
             return this;
         }
 
+        public Section setLeftIconSize(int width, int height) {
+            mLeftIconHeight = height;
+            mLeftIconWidth = width;
+            return this;
+        }
+
         /**
          * 将 Section 添加到 {@link QMUIGroupListView} 上
          */
@@ -335,6 +361,14 @@ public class QMUIGroupListView extends LinearLayout {
             }
 
             final int itemViewCount = mItemViews.size();
+            QMUICommonListItemView.LayoutParamConfig leftIconLpConfig = new QMUICommonListItemView.LayoutParamConfig() {
+                @Override
+                public RelativeLayout.LayoutParams onConfig(RelativeLayout.LayoutParams lp) {
+                    lp.width = mLeftIconWidth;
+                    lp.height = mLeftIconHeight;
+                    return lp;
+                }
+            };
             for (int i = 0; i < itemViewCount; i++) {
                 QMUICommonListItemView itemView = mItemViews.get(i);
                 int resDrawableId;
@@ -351,6 +385,7 @@ public class QMUIGroupListView extends LinearLayout {
                 } else {
                     resDrawableId = R.drawable.qmui_s_list_item_bg_with_border_none;
                 }
+                itemView.updateImageViewLp(leftIconLpConfig);
                 QMUIViewHelper.setBackgroundKeepingPadding(itemView, resDrawableId);
                 groupListView.addView(itemView);
             }

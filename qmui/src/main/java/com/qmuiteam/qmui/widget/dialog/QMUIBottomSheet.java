@@ -1,6 +1,21 @@
+/*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qmuiteam.qmui.widget.dialog;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Typeface;
@@ -9,6 +24,7 @@ import android.os.Bundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.content.res.AppCompatResources;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.Log;
 import android.util.SparseArray;
@@ -571,6 +587,7 @@ public class QMUIBottomSheet extends Dialog {
         private int mMiniItemWidth = -1;
         private OnSheetItemClickListener mOnSheetItemClickListener;
         private Typeface mItemTextTypeFace = null;
+        private ViewGroup mBottomButtonContainer;
         private TextView mBottomButton;
         private Typeface mBottomButtonTypeFace = null;
         private boolean mIsShowButton = true;
@@ -617,10 +634,25 @@ public class QMUIBottomSheet extends Dialog {
         }
 
         public BottomGridSheetBuilder addItem(int imageRes, CharSequence text, Object tag, @Style int style, int subscriptRes) {
+            QMUIBottomSheetItemView itemView = createItemView(AppCompatResources.getDrawable(mContext, imageRes), text, tag, subscriptRes);
+            return addItem(itemView, style);
+        }
+
+        public BottomGridSheetBuilder addItem(View view, @Style int style) {
+            switch (style) {
+                case FIRST_LINE:
+                    mFirstLineViews.append(mFirstLineViews.size(), view);
+                    break;
+                case SECOND_LINE:
+                    mSecondLineViews.append(mSecondLineViews.size(), view);
+                    break;
+            }
+            return this;
+        }
+
+        public QMUIBottomSheetItemView createItemView(Drawable drawable, CharSequence text, Object tag, int subscriptRes) {
             LayoutInflater inflater = LayoutInflater.from(mContext);
-            // 给机会让用的人自定义ItemView
-            @SuppressLint("InflateParams") LinearLayout itemView = (LinearLayout) inflater.inflate(R.layout.qmui_bottom_sheet_grid_item, null, false);
-            // 字体加粗
+            QMUIBottomSheetItemView itemView = (QMUIBottomSheetItemView) inflater.inflate(getItemViewLayoutId(), null, false);
             TextView titleTV = (TextView) itemView.findViewById(R.id.grid_item_title);
             if (mItemTextTypeFace != null) {
                 titleTV.setTypeface(mItemTextTypeFace);
@@ -630,23 +662,14 @@ public class QMUIBottomSheet extends Dialog {
             itemView.setTag(tag);
             itemView.setOnClickListener(this);
             AppCompatImageView imageView = (AppCompatImageView) itemView.findViewById(R.id.grid_item_image);
-            imageView.setImageResource(imageRes);
+            imageView.setImageDrawable(drawable);
 
             if (subscriptRes != 0) {
                 ViewStub stub = (ViewStub) itemView.findViewById(R.id.grid_item_subscript);
                 View inflated = stub.inflate();
                 ((ImageView) inflated).setImageResource(subscriptRes);
             }
-
-            switch (style) {
-                case FIRST_LINE:
-                    mFirstLineViews.append(mFirstLineViews.size(), itemView);
-                    break;
-                case SECOND_LINE:
-                    mSecondLineViews.append(mSecondLineViews.size(), itemView);
-                    break;
-            }
-            return this;
+            return itemView;
         }
 
         public void setItemVisibility(Object tag, int visibility) {
@@ -693,7 +716,8 @@ public class QMUIBottomSheet extends Dialog {
             baseLinearLayout = (LinearLayout) View.inflate(mContext, getContentViewLayoutId(), null);
             LinearLayout firstLine = (LinearLayout) baseLinearLayout.findViewById(R.id.bottom_sheet_first_linear_layout);
             LinearLayout secondLine = (LinearLayout) baseLinearLayout.findViewById(R.id.bottom_sheet_second_linear_layout);
-            mBottomButton = (TextView) baseLinearLayout.findViewById(R.id.bottom_sheet_button);
+            mBottomButtonContainer = (ViewGroup) baseLinearLayout.findViewById(R.id.bottom_sheet_button_container);
+            mBottomButton = (TextView) baseLinearLayout.findViewById(R.id.bottom_sheet_close_button);
 
             int maxItemCountEachLine = Math.max(mFirstLineViews.size(), mSecondLineViews.size());
             int screenWidth = QMUIDisplayHelper.getScreenWidth(mContext);
@@ -721,13 +745,15 @@ public class QMUIBottomSheet extends Dialog {
             }
 
             // button 在用户自定义了contentView的情况下可能不存在
-            if (mBottomButton != null) {
+            if (mBottomButtonContainer != null) {
                 if (mIsShowButton) {
-                    mBottomButton.setVisibility(View.VISIBLE);
-                    int dimen = QMUIResHelper.getAttrDimen(mContext, R.attr.qmui_bottom_sheet_grid_padding_vertical);
-                    baseLinearLayout.setPadding(0, dimen, 0, 0);
+                    mBottomButtonContainer.setVisibility(View.VISIBLE);
+                    baseLinearLayout.setPadding(baseLinearLayout.getPaddingLeft(),
+                            baseLinearLayout.getPaddingTop(),
+                            baseLinearLayout.getPaddingRight(),
+                            0);
                 } else {
-                    mBottomButton.setVisibility(View.GONE);
+                    mBottomButtonContainer.setVisibility(View.GONE);
                 }
                 if (mBottomButtonTypeFace != null) {
                     mBottomButton.setTypeface(mBottomButtonTypeFace);
@@ -754,6 +780,10 @@ public class QMUIBottomSheet extends Dialog {
 
         protected int getContentViewLayoutId() {
             return R.layout.qmui_bottom_sheet_grid;
+        }
+
+        protected int getItemViewLayoutId() {
+            return R.layout.qmui_bottom_sheet_grid_item;
         }
 
         /**

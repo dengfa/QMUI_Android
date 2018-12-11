@@ -1,5 +1,22 @@
+/*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qmuiteam.qmui.util;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AppOpsManager;
 import android.content.Context;
@@ -23,6 +40,7 @@ import java.util.regex.Pattern;
  * @author cginechen
  * @date 2016-08-11
  */
+@SuppressLint("PrivateApi")
 public class QMUIDeviceHelper {
     private final static String TAG = "QMUIDeviceHelper";
     private final static String KEY_MIUI_VERSION_NAME = "ro.miui.ui.version.name";
@@ -30,29 +48,40 @@ public class QMUIDeviceHelper {
     private final static String FLYME = "flyme";
     private final static String ZTEC2016 = "zte c2016";
     private final static String ZUKZ1 = "zuk z1";
+    private final static String ESSENTIAL = "essential";
     private final static String MEIZUBOARD[] = {"m9", "M9", "mx", "MX"};
     private static String sMiuiVersionName;
     private static String sFlymeVersionName;
     private static boolean sIsTabletChecked = false;
     private static boolean sIsTabletValue = false;
+    private static final String BRAND = Build.BRAND.toLowerCase();
 
     static {
-        FileInputStream fileInputStream = null;
+        Properties properties = new Properties();
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // android 8.0，读取 /system/uild.prop 会报 permission denied
+            FileInputStream fileInputStream = null;
+            try {
+                fileInputStream = new FileInputStream(new File(Environment.getRootDirectory(), "build.prop"));
+                properties.load(fileInputStream);
+            } catch (Exception e) {
+                QMUILog.printErrStackTrace(TAG, e, "read file error");
+            } finally {
+                QMUILangHelper.close(fileInputStream);
+            }
+        }
+
+        Class<?> clzSystemProperties = null;
         try {
-            fileInputStream = new FileInputStream(new File(Environment.getRootDirectory(), "build.prop"));
-            Properties properties = new Properties();
-            properties.load(fileInputStream);
-            Class<?> clzSystemProperties = Class.forName("android.os.SystemProperties");
+            clzSystemProperties = Class.forName("android.os.SystemProperties");
             Method getMethod = clzSystemProperties.getDeclaredMethod("get", String.class);
             // miui
-            sMiuiVersionName =getLowerCaseName(properties, getMethod, KEY_MIUI_VERSION_NAME);
+            sMiuiVersionName = getLowerCaseName(properties, getMethod, KEY_MIUI_VERSION_NAME);
             //flyme
             sFlymeVersionName = getLowerCaseName(properties, getMethod, KEY_FLYME_VERSION_NAME);
-
         } catch (Exception e) {
-            QMUILog.printErrStackTrace(TAG, e, "getProperty error");
-        } finally {
-            QMUILangHelper.close(fileInputStream);
+            QMUILog.printErrStackTrace(TAG, e, "read SystemProperties error");
         }
     }
 
@@ -110,7 +139,7 @@ public class QMUIDeviceHelper {
     public static boolean isFlymeVersionHigher5_2_4() {
         //查不到默认高于5.2.4
         boolean isHigher = true;
-        if(sFlymeVersionName != null && !sFlymeVersionName.equals("")){
+        if (sFlymeVersionName != null && !sFlymeVersionName.equals("")) {
             Pattern pattern = Pattern.compile("(\\d+\\.){2}\\d");
             Matcher matcher = pattern.matcher(sFlymeVersionName);
             if (matcher.find()) {
@@ -143,18 +172,32 @@ public class QMUIDeviceHelper {
         return isMeizu() && isHigher;
     }
 
-    /**
-     * 判断是否为魅族
-     */
     public static boolean isMeizu() {
         return isPhone(MEIZUBOARD) || isFlyme();
     }
 
     /**
      * 判断是否为小米
+     * https://dev.mi.com/doc/?p=254
      */
     public static boolean isXiaomi() {
-        return Build.BRAND.toLowerCase().contains("xiaomi");
+        return Build.MANUFACTURER.toLowerCase().equals("xiaomi");
+    }
+
+    public static boolean isVivo() {
+        return BRAND.contains("vivo") || BRAND.contains("bbk");
+    }
+
+    public static boolean isOppo() {
+        return BRAND.contains("oppo");
+    }
+
+    public static boolean isHuawei() {
+        return BRAND.contains("huawei") || BRAND.contains("honor");
+    }
+
+    public static boolean isEssentialPhone(){
+        return BRAND.contains("essential");
     }
 
 
@@ -225,7 +268,8 @@ public class QMUIDeviceHelper {
         if (name == null) {
             try {
                 name = (String) get.invoke(null, key);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         if (name != null) name = name.toLowerCase();
         return name;

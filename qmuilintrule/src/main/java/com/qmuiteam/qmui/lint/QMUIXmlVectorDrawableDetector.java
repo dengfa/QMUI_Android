@@ -1,3 +1,19 @@
+/*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qmuiteam.qmui.lint;
 
 import com.android.annotations.NonNull;
@@ -37,7 +53,7 @@ public class QMUIXmlVectorDrawableDetector extends ResourceXmlDetector {
             Issue.create("QMUIGetVectorDrawableWithWrongProperty",
                     "Should use the corresponding property to get vector drawable.",
                     "Using the normal property to get the vector drawable will cause a crash on Android versions below 4.0.",
-                    Category.ICONS, 2, Severity.ERROR,
+                    Category.CORRECTNESS, 8, Severity.ERROR,
                     new Implementation(QMUIXmlVectorDrawableDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     private static final Collection<String> mAttrList = Lists.newArrayList(ATTR_DRAWABLE_LEFT, ATTR_DRAWABLE_RIGHT, ATTR_DRAWABLE_TOP, ATTR_DRAWABLE_BOTTOM);

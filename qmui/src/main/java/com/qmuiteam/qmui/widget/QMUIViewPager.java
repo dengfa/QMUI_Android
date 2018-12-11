@@ -1,3 +1,19 @@
+/*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qmuiteam.qmui.widget;
 
 import android.content.Context;
@@ -5,9 +21,10 @@ import android.database.DataSetObserver;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v4.view.WindowInsetsCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -65,6 +82,12 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
     }
 
     @Override
+    public void addView(View child, int index, ViewGroup.LayoutParams params) {
+        super.addView(child, index, params);
+        ViewCompat.requestApplyInsets(this);
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent ev) {
         return mIsSwipeable && super.onTouchEvent(ev);
 
@@ -102,7 +125,7 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
     }
 
     @Override
-    public boolean applySystemWindowInsets21(WindowInsetsCompat insets) {
+    public boolean applySystemWindowInsets21(Object insets) {
         return mQMUIWindowInsetHelper.defaultApplySystemWindowInsets21(this, insets);
     }
 
@@ -193,17 +216,17 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
         }
 
         @Override
-        public void setPrimaryItem(ViewGroup container, int position, Object object) {
+        public void setPrimaryItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
             mAdapter.setPrimaryItem(container, position, object);
         }
 
         @Override
-        public void unregisterDataSetObserver(DataSetObserver observer) {
+        public void unregisterDataSetObserver(@NonNull DataSetObserver observer) {
             mAdapter.unregisterDataSetObserver(observer);
         }
 
         @Override
-        public void registerDataSetObserver(DataSetObserver observer) {
+        public void registerDataSetObserver(@NonNull DataSetObserver observer) {
             mAdapter.registerDataSetObserver(observer);
         }
 

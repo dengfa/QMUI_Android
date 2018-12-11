@@ -1,3 +1,19 @@
+/*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qmuiteam.qmui.util;
 
 import android.annotation.TargetApi;
@@ -9,6 +25,7 @@ import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
@@ -20,7 +37,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.FloatRange;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.AppCompatDrawableManager;
+import android.support.v7.content.res.AppCompatResources;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -153,7 +170,9 @@ public class QMUIDrawableHelper {
      */
     public static ColorFilter setDrawableTintColor(Drawable drawable, @ColorInt int tintColor) {
         LightingColorFilter colorFilter = new LightingColorFilter(Color.argb(255, 0, 0, 0), tintColor);
-        drawable.setColorFilter(colorFilter);
+        if(drawable != null){
+            drawable.setColorFilter(colorFilter);
+        }
         return colorFilter;
     }
 
@@ -174,12 +193,15 @@ public class QMUIDrawableHelper {
             return null;
 
         try {
-            Bitmap bitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888);
+            Bitmap.Config config = drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
+                    : Bitmap.Config.RGB_565;
+            Bitmap bitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, config);
             Canvas canvas = new Canvas(bitmap);
             drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
             drawable.draw(canvas);
             return bitmap;
         } catch (OutOfMemoryError e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -243,7 +265,7 @@ public class QMUIDrawableHelper {
     @Nullable
     Drawable getVectorDrawable(Context context, @DrawableRes int resVector) {
         try {
-            return AppCompatDrawableManager.get().getDrawable(context, resVector);
+            return AppCompatResources.getDrawable(context, resVector);
         } catch (Exception e) {
             QMUILog.d(TAG, "Error in getVectorDrawable. resVector=" + resVector + ", resName=" + context.getResources().getResourceName(resVector) + e.getMessage());
             return null;

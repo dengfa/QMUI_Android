@@ -1,19 +1,38 @@
+/*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qmuiteam.qmuidemo.fragment.components;
 
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 
+import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 import com.qmuiteam.qmui.widget.QMUILoadingView;
-import com.qmuiteam.qmui.widget.QMUITopBar;
+import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView;
 import com.qmuiteam.qmui.widget.grouplist.QMUIGroupListView;
-import com.qmuiteam.qmuidemo.QDDataManager;
-import com.qmuiteam.qmuidemo.base.BaseFragment;
-import com.qmuiteam.qmuidemo.model.QDItemDescription;
 import com.qmuiteam.qmuidemo.R;
+import com.qmuiteam.qmuidemo.base.BaseFragment;
 import com.qmuiteam.qmuidemo.lib.annotation.Widget;
+import com.qmuiteam.qmuidemo.manager.QDDataManager;
+import com.qmuiteam.qmuidemo.model.QDItemDescription;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -26,8 +45,10 @@ import butterknife.ButterKnife;
 @Widget(widgetClass = QMUIGroupListView.class, iconRes = R.mipmap.icon_grid_group_list_view)
 public class QDGroupListViewFragment extends BaseFragment {
 
-    @BindView(R.id.topbar) QMUITopBar mTopBar;
-    @BindView(R.id.groupListView) QMUIGroupListView mGroupListView;
+    @BindView(R.id.topbar)
+    QMUITopBarLayout mTopBar;
+    @BindView(R.id.groupListView)
+    QMUIGroupListView mGroupListView;
 
     private QDItemDescription mQDItemDescription;
 
@@ -56,10 +77,20 @@ public class QDGroupListViewFragment extends BaseFragment {
     }
 
     private void initGroupListView() {
-        QMUICommonListItemView normalItem = mGroupListView.createItemView("Item 1");
+        QMUICommonListItemView normalItem = mGroupListView.createItemView(
+                ContextCompat.getDrawable(getContext(), R.mipmap.about_logo),
+                "Item 1",
+                null,
+                QMUICommonListItemView.HORIZONTAL,
+                QMUICommonListItemView.ACCESSORY_TYPE_NONE);
         normalItem.setOrientation(QMUICommonListItemView.VERTICAL);
 
-        QMUICommonListItemView itemWithDetail = mGroupListView.createItemView("Item 2");
+        QMUICommonListItemView itemWithDetail = mGroupListView.createItemView(
+                ContextCompat.getDrawable(getContext(), R.mipmap.example_image0),
+                "Item 2",
+                null,
+                QMUICommonListItemView.HORIZONTAL,
+                QMUICommonListItemView.ACCESSORY_TYPE_NONE);
         itemWithDetail.setDetailText("在右方的详细信息");
 
         QMUICommonListItemView itemWithDetailBelow = mGroupListView.createItemView("Item 3");
@@ -93,9 +124,11 @@ public class QDGroupListViewFragment extends BaseFragment {
             }
         };
 
+        int size = QMUIDisplayHelper.dp2px(getContext(), 20);
         QMUIGroupListView.newSection(getContext())
                 .setTitle("Section 1: 默认提供的样式")
                 .setDescription("Section 1 的描述")
+                .setLeftIconSize(size, ViewGroup.LayoutParams.WRAP_CONTENT)
                 .addItemView(normalItem, onClickListener)
                 .addItemView(itemWithDetail, onClickListener)
                 .addItemView(itemWithDetailBelow, onClickListener)

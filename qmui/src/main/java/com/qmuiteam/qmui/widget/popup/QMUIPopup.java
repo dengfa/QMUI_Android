@@ -1,9 +1,26 @@
+/*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qmuiteam.qmui.widget.popup;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Point;
 import android.support.annotation.IntDef;
+import android.support.annotation.LayoutRes;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +28,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.qmuiteam.qmui.R;
+import com.qmuiteam.qmui.layout.IQMUILayout;
+import com.qmuiteam.qmui.layout.QMUIFrameLayout;
+import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -47,6 +67,7 @@ public class QMUIPopup extends QMUIBasePopup {
     private int mOffsetYWhenTop = 0;
     // 计算位置后的偏移y值，当浮层在View的下方时使用
     private int mOffsetYWhenBottom = 0;
+
     public QMUIPopup(Context context) {
         this(context, DIRECTION_NONE);
     }
@@ -96,7 +117,7 @@ public class QMUIPopup extends QMUIBasePopup {
     }
 
     @Override
-    protected Point onShow(View attachedView) {
+    protected Point onShowBegin(View parent, View attachedView) {
         calculatePosition(attachedView);
 
         showArrow();
@@ -110,6 +131,11 @@ public class QMUIPopup extends QMUIBasePopup {
             offsetY = mOffsetYWhenBottom;
         }
         return new Point(mX + mOffsetX, mY + offsetY);
+    }
+
+    @Override
+    protected void onWindowSizeChange() {
+
     }
 
     private void calculatePosition(View attachedView) {
@@ -142,7 +168,7 @@ public class QMUIPopup extends QMUIBasePopup {
                     break;
                 case DIRECTION_BOTTOM:
                     mY = attachedViewLocation[1] + attachedView.getHeight();
-                    if (mY > mScreenSize.y - mPopupTopBottomMinMargin) {
+                    if (mY > mScreenSize.y - mPopupTopBottomMinMargin - mWindowHeight) {
                         mY = attachedViewLocation[1] - mWindowHeight;
                         mDirection = DIRECTION_TOP;
                     }
@@ -236,14 +262,39 @@ public class QMUIPopup extends QMUIBasePopup {
 
     @Override
     public void setContentView(View root) {
+        if (root.getBackground() != null) {
+            if (root instanceof IQMUILayout) {
+                ((IQMUILayout) root).setRadius(getRootLayoutRadius(mContext));
+            } else {
+                QMUIFrameLayout clipLayout = new QMUIFrameLayout(mContext);
+                clipLayout.setRadius(getRootLayoutRadius(mContext));
+                clipLayout.addView(root);
+                root = clipLayout;
+            }
+
+        }
         @SuppressLint("InflateParams") FrameLayout layout = (FrameLayout) LayoutInflater.from(mContext)
-                .inflate(R.layout.qmui_popup_layout, null, false);
+                .inflate(getRootLayout(), null, false);
         mArrowDown = (ImageView) layout.findViewById(R.id.arrow_down);
         mArrowUp = (ImageView) layout.findViewById(R.id.arrow_up);
         FrameLayout box = (FrameLayout) layout.findViewById(R.id.box);
         box.addView(root);
 
         super.setContentView(layout);
+    }
+
+    /**
+     * the root layout: must provide ids: arrow_down(ImageView), arrow_up(ImageView), box(FrameLayout)
+     *
+     * @return
+     */
+    @LayoutRes
+    protected int getRootLayout() {
+        return R.layout.qmui_popup_layout;
+    }
+
+    protected int getRootLayoutRadius(Context context) {
+        return QMUIDisplayHelper.dp2px(context, 5);
     }
 
     private void setViewVisibility(View view, boolean visible) {

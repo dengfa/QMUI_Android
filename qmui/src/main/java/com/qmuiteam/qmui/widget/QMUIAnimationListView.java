@@ -1,3 +1,19 @@
+/*
+ * Tencent is pleased to support the open source community by making QMUI_Android available.
+ *
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ *
+ * Licensed under the MIT License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qmuiteam.qmui.widget;
 
 import android.animation.Animator;
@@ -10,6 +26,7 @@ import android.content.Context;
 import android.database.DataSetObserver;
 import android.graphics.Canvas;
 import android.os.Build;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.util.LongSparseArray;
 import android.support.v4.view.ViewCompat;
@@ -24,6 +41,8 @@ import android.view.animation.LinearInterpolator;
 import android.widget.BaseAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import com.qmuiteam.qmui.QMUILog;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -114,7 +133,7 @@ public class QMUIAnimationListView extends ListView {
     @Override
     public void setAdapter(ListAdapter adapter) {
         mRealAdapter = adapter;
-        mWrapperAdapter = new WrapperAdapter(mRealAdapter);
+        mWrapperAdapter = adapter != null ? new WrapperAdapter(mRealAdapter) : null;
         super.setAdapter(mWrapperAdapter);
     }
 
@@ -540,6 +559,15 @@ public class QMUIAnimationListView extends ListView {
 
         public boolean isAnimationEnabled() {
             return mIsAnimationEnabled;
+        }
+
+        @Override
+        public void notifyDataSetChanged() {
+            if (Looper.myLooper() != Looper.getMainLooper()) {
+                QMUILog.d(TAG, "notifyDataSetChanged not in main Thread");
+                return;
+            }
+            super.notifyDataSetChanged();
         }
 
         @Override
