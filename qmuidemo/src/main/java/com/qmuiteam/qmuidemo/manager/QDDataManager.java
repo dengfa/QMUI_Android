@@ -27,6 +27,7 @@ import com.qmuiteam.qmuidemo.fragment.components.QDFloatLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDGroupListViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDLinkTextViewFragment;
+import com.qmuiteam.qmuidemo.fragment.components.QDPageCurlFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDPopupFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDPriorityLinearLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDProgressBarFragment;
@@ -109,6 +110,7 @@ public class QDDataManager {
         mComponentsNames.add(QDLayoutFragment.class);
         mComponentsNames.add(QDPriorityLinearLayoutFragment.class);
         mComponentsNames.add(QD3DRotationFragment.class);
+        mComponentsNames.add(QDPageCurlFragment.class);
     }
 
     /**
