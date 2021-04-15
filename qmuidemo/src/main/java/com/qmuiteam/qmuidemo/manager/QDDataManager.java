@@ -23,6 +23,7 @@ import com.qmuiteam.qmuidemo.fragment.components.QDButtonFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDCollapsingTopBarLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDDialogFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDEmptyViewFragment;
+import com.qmuiteam.qmuidemo.fragment.components.endlessrv.QDEndlessRecyclerViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDFloatLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDGroupListViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDLayoutFragment;
@@ -110,6 +111,7 @@ public class QDDataManager {
         mComponentsNames.add(QDLayoutFragment.class);
         mComponentsNames.add(QDPriorityLinearLayoutFragment.class);
         mComponentsNames.add(QD3DRotationFragment.class);
+        mComponentsNames.add(QDEndlessRecyclerViewFragment.class);
         mComponentsNames.add(QDPageCurlFragment.class);
     }
 
