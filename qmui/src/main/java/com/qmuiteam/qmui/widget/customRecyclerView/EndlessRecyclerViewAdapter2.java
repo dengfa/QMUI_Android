@@ -1,4 +1,4 @@
-package com.qmuiteam.qmui.widget.custom;
+package com.qmuiteam.qmui.widget.customRecyclerView;
 
 import android.content.Context;
 import android.support.annotation.LayoutRes;
@@ -17,6 +17,7 @@ import static android.support.v7.widget.RecyclerView.ViewHolder;
 
 /**
  * @author rockerhieu on 7/6/15.
+ * 支持双向加载更多的RecyclerView
  */
 public class EndlessRecyclerViewAdapter2 extends RecyclerViewAdapterWrapper {
     public static final int TYPE_PENDING_AFTER = 999; //后向加载

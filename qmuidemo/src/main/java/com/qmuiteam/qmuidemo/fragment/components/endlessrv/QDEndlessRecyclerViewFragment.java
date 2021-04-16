@@ -24,34 +24,24 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.widget.ImageView;
 
-import com.qmuiteam.qmui.animation.Rotate3dAnimation;
-import com.qmuiteam.qmui.widget.QMUITopBarLayout;
-import com.qmuiteam.qmui.widget.custom.EndlessRecyclerViewAdapter;
-import com.qmuiteam.qmui.widget.custom.EndlessRecyclerViewAdapter2;
+import com.qmuiteam.qmui.widget.customRecyclerView.EndlessRecyclerViewAdapter2;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.base.BaseFragment;
 import com.qmuiteam.qmuidemo.fragment.components.endlessrv.adapter.SimpleStringAdapter;
-import com.qmuiteam.qmuidemo.fragment.components.endlessrv.decorator.DividerItemDecoration;
 import com.qmuiteam.qmuidemo.lib.annotation.Widget;
-import com.qmuiteam.qmuidemo.manager.QDDataManager;
-import com.qmuiteam.qmuidemo.model.QDItemDescription;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import butterknife.BindView;
 import butterknife.ButterKnife;
 
 /**
  * 双端加载更多的RecyclerView
  */
-@Widget(widgetClass = EndlessRecyclerViewAdapter.class, iconRes = R.mipmap.icon_grid_span)
+@Widget(widgetClass = EndlessRecyclerViewAdapter2.class, iconRes = R.mipmap.icon_grid_span)
 public class QDEndlessRecyclerViewFragment extends BaseFragment implements EndlessRecyclerViewAdapter2.RequestToLoadMoreListener{
 
     private EndlessRecyclerViewAdapter2 endlessRecyclerViewAdapter;
