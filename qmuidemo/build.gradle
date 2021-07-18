@@ -52,11 +52,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        release {
+        /*release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
-        }
+        }*/
     }
     // 避免 lint 检测出错时停止构建
     lintOptions {
@@ -100,7 +100,7 @@ dependencies {
     testImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
     //test
     testImplementation 'junit:junit:4.12'
-    //    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    //    androidTestImplementation 'com.android.support.test:rules:1.0.2' // Set this dependency to use JUnit 4 rules
-    //    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2' // Set this dependency to build and run Espresso tests
+    //    androidTestImplementation 'com.androidx.test:runner:1.0.2'
+    //    androidTestImplementation 'com.androidx.test:rules:1.0.2' // Set this dependency to use JUnit 4 rules
+    //    androidTestImplementation 'com.androidx.test.espresso:espresso-core:3.0.2' // Set this dependency to build and run Espresso tests
 }

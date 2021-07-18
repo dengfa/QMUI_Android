@@ -3,10 +3,10 @@ package com.qmuiteam.qmui.widget.customRecyclerView.pagerRecyclerView;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * 实现RecycleView分页滚动的工具类

@@ -1,19 +1,17 @@
 package com.qmuiteam.qmui.widget.customRecyclerView;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import com.qmuiteam.qmui.R;
-import com.rockerhieu.rvadapter.RecyclerViewAdapterWrapper;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static android.support.v7.widget.RecyclerView.Adapter;
-import static android.support.v7.widget.RecyclerView.ViewHolder;
+import static androidx.recyclerview.widget.RecyclerView.*;
 
 /**
  * @author rockerhieu on 7/6/15.
@@ -30,7 +28,12 @@ public class EndlessRecyclerViewAdapter2 extends RecyclerViewAdapterWrapper {
     private AtomicBoolean dataPendingBefore; //前向加载中
     private RequestToLoadMoreListener requestToLoadMoreListener;
 
-    public EndlessRecyclerViewAdapter2(Context context,  Adapter wrapped, RequestToLoadMoreListener requestToLoadMoreListener, @LayoutRes int pendingViewResId, boolean keepOnAppendingAfter, boolean keepOnAppendingBefore) {
+    public EndlessRecyclerViewAdapter2(Context context,
+                                       Adapter wrapped,
+                                       RequestToLoadMoreListener requestToLoadMoreListener,
+                                       @LayoutRes int pendingViewResId,
+                                       boolean keepOnAppendingAfter,
+                                       boolean keepOnAppendingBefore) {
         super(wrapped);
         this.context = context;
         this.requestToLoadMoreListener = requestToLoadMoreListener;
@@ -113,16 +116,14 @@ public class EndlessRecyclerViewAdapter2 extends RecyclerViewAdapterWrapper {
 
     /**
      * 得到被装饰的适配器真实的位置
-     *
-     * @param position
-     * @return
      */
     private int getWrappedAdapterPosition(int position) {
         return keepOnAppendingBefore.get() ? position - 1 : position;
     }
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_PENDING_AFTER || viewType == TYPE_PENDING_BEFORE) {
             return new PendingViewHolder(getPendingView(parent));
         }
@@ -130,7 +131,7 @@ public class EndlessRecyclerViewAdapter2 extends RecyclerViewAdapterWrapper {
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Log.i("songhang", "position : " + position);
         if (getItemViewType(position) == TYPE_PENDING_AFTER) {
             if (!dataPendingAfter.get()) {

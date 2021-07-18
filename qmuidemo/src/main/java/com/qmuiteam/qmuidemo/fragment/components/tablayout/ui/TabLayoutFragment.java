@@ -1,14 +1,14 @@
 package com.qmuiteam.qmuidemo.fragment.components.tablayout.ui;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import com.qmuiteam.qmui.tablayout.CommonTabLayout;
@@ -50,12 +50,7 @@ public class TabLayoutFragment extends BaseFragment {
     }
 
     private void initTopBar() {
-        mTopBar.addLeftBackImageButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popBackStack();
-            }
-        });
+        mTopBar.addLeftBackImageButton().setOnClickListener(v -> popBackStack());
         QDItemDescription qdItemDescription = QDDataManager.getInstance().getDescription(this.getClass());
         mTopBar.setTitle(qdItemDescription.getName());
     }
@@ -80,6 +75,7 @@ public class TabLayoutFragment extends BaseFragment {
             return mTitles[position];
         }
 
+        @NonNull
         @Override
         public Fragment getItem(int position) {
             return mFragments.get(position);
