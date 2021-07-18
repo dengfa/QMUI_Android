@@ -17,6 +17,7 @@
 package com.qmuiteam.qmuidemo.manager;
 
 import com.qmuiteam.qmuidemo.base.BaseFragment;
+import com.qmuiteam.qmuidemo.fragment.components.HorizontalRefreshFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QD3DRotationFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDBottomSheetFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDButtonFragment;
@@ -133,6 +134,7 @@ public class QDDataManager {
         mComponentsNames.add(QDPageCurlFragment.class);
         mComponentsNames.add(TabLayoutFragment.class);
         mComponentsNames.add(BottomSheetFragment.class);
+        mComponentsNames.add(HorizontalRefreshFragment.class);
     }
 
     /**
