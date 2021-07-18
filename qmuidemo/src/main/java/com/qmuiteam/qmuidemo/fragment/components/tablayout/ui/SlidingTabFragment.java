@@ -2,15 +2,15 @@ package com.qmuiteam.qmuidemo.fragment.components.tablayout.ui;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import butterknife.ButterKnife;
 import com.qmuiteam.qmui.tablayout.SlidingTabLayout;
 import com.qmuiteam.qmui.tablayout.listener.OnTabSelectListener;
@@ -37,6 +37,7 @@ public class SlidingTabFragment extends BaseFragment implements OnTabSelectListe
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        mFragments.clear();
         for (String title : mTitles) {
             mFragments.add(SimpleCardFragment.getInstance(title));
         }
@@ -120,6 +121,7 @@ public class SlidingTabFragment extends BaseFragment implements OnTabSelectListe
             return mTitles[position];
         }
 
+        @NonNull
         @Override
         public Fragment getItem(int position) {
             return mFragments.get(position);

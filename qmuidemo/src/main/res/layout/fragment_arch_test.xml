@@ -25,7 +25,8 @@
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/qmui_topbar_height"
         android:background="@color/qmui_config_color_white"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        app:qmui_skin_background="?attr/app_skin_common_background">
 
         <Space
             android:id="@+id/anchor"
@@ -43,6 +44,29 @@
             android:textColor="?attr/qmui_config_color_gray_1"
             android:textSize="32sp"/>
 
+        <TextView
+            android:id="@+id/test"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/title"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            android:textColor="?attr/qmui_config_color_gray_1"
+            android:textSize="32sp"
+            android:text="test for skin maker"/>
+
+        <TextView
+            android:id="@+id/test_only_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/test"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            android:textColor="?attr/qmui_config_color_gray_1"
+            android:textSize="32sp"
+            android:text="test for skin maker(id)"/>
+
+
         <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
             android:id="@+id/btn"
             android:layout_width="match_parent"
@@ -57,7 +81,7 @@
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
             android:paddingTop="10dp"
-            android:text="圆角为高度的一半"
+            android:text=""
             app:qmui_isRadiusAdjustBounds="true"/>
 
         <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
@@ -75,6 +99,40 @@
             android:paddingRight="16dp"
             android:paddingTop="10dp"
             android:text="popBackStack and then startActivity"
+            app:qmui_isRadiusAdjustBounds="true"/>
+
+        <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+            android:id="@+id/btn_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/btn_1"
+            android:layout_centerHorizontal="true"
+            android:layout_marginLeft="?attr/qmui_content_spacing_horizontal"
+            android:layout_marginRight="?attr/qmui_content_spacing_horizontal"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:paddingBottom="10dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="10dp"
+            android:text="start nav fragment"
+            app:qmui_isRadiusAdjustBounds="true"/>
+
+        <com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton
+            android:id="@+id/btn_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/btn_2"
+            android:layout_centerHorizontal="true"
+            android:layout_marginLeft="?attr/qmui_content_spacing_horizontal"
+            android:layout_marginRight="?attr/qmui_content_spacing_horizontal"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:paddingBottom="10dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="10dp"
+            android:text="parentFragment.startFragment"
             app:qmui_isRadiusAdjustBounds="true"/>
     </RelativeLayout>
 

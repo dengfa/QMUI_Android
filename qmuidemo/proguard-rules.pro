@@ -15,3 +15,12 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-keep class **_FragmentFinder { *; }
+-keep class androidx.fragment.app.* { *; }
+
+-keep class com.qmuiteam.qmui.arch.record.RecordIdClassMap { *; }
+-keep class com.qmuiteam.qmui.arch.record.RecordIdClassMapImpl { *; }
+
+-keep class com.qmuiteam.qmui.arch.scheme.SchemeMap {*;}
+-keep class com.qmuiteam.qmui.arch.scheme.SchemeMapImpl {*;}

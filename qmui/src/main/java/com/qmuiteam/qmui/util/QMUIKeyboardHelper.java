@@ -26,6 +26,14 @@ import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
+import androidx.annotation.NonNull;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsAnimationCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import java.util.List;
+
 /**
  * @author cginechen
  * @date 2016-11-07
@@ -90,6 +98,43 @@ public class QMUIKeyboardHelper {
         // 即使当前焦点不在editText，也是可以隐藏的。
         return inputManager.hideSoftInputFromWindow(view.getWindowToken(),
                 InputMethodManager.HIDE_NOT_ALWAYS);
+    }
+
+
+    public static void listenKeyBoardWithOffsetSelf(final View view, final boolean minusNav){
+        ViewCompat.setWindowInsetsAnimationCallback(view, new WindowInsetsAnimationCompat.Callback(WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP) {
+            @NonNull
+            @Override
+            public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
+                int height;
+                Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+                height = ime.bottom;
+                if(minusNav){
+                    Insets nav = insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.navigationBars());
+                    height -= nav.bottom;
+                }
+                QMUIViewHelper.getOrCreateOffsetHelper(view).setTopAndBottomOffset(-height);
+                return insets;
+            }
+        });
+    }
+
+    public static void listenKeyBoardWithOffsetSelfHalf(final View view, final boolean minusNav){
+        ViewCompat.setWindowInsetsAnimationCallback(view, new WindowInsetsAnimationCompat.Callback(WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP) {
+            @NonNull
+            @Override
+            public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
+                int height;
+                Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+                height = ime.bottom;
+                if(minusNav){
+                    Insets nav = insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.navigationBars());
+                    height -= nav.bottom;
+                }
+                QMUIViewHelper.getOrCreateOffsetHelper(view).setTopAndBottomOffset(-height / 2);
+                return insets;
+            }
+        });
     }
 
     /**

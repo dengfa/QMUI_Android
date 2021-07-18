@@ -19,23 +19,31 @@ package com.qmuiteam.qmui.arch;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.FrameLayout;
+import android.widget.OverScroller;
 
-import com.qmuiteam.qmui.widget.QMUIWindowInsetLayout;
+import androidx.annotation.NonNull;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import com.qmuiteam.qmui.util.QMUILangHelper;
+import com.qmuiteam.qmui.util.QMUIViewOffsetHelper;
+import com.qmuiteam.qmui.util.QMUIWindowInsetHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.qmuiteam.qmui.QMUIInterpolatorStaticHolder.QUNITIC_INTERPOLATOR;
 
 /**
  * Created by cgspine on 2018/1/7.
@@ -44,110 +52,69 @@ import java.util.List;
  */
 
 
-public class SwipeBackLayout extends QMUIWindowInsetLayout {
-    /**
-     * Minimum velocity that will be detected as a fling
-     */
+public class SwipeBackLayout extends FrameLayout {
+
     private static final int MIN_FLING_VELOCITY = 400; // dips per second
-
     private static final int DEFAULT_SCRIM_COLOR = 0x99000000;
-
     private static final int FULL_ALPHA = 255;
-
-    /**
-     * Edge flag indicating that the left edge should be affected.
-     */
-    public static final int EDGE_LEFT = ViewDragHelper.EDGE_LEFT;
-
-    /**
-     * Edge flag indicating that the right edge should be affected.
-     */
-    public static final int EDGE_RIGHT = ViewDragHelper.EDGE_RIGHT;
-
-    /**
-     * Edge flag indicating that the bottom edge should be affected.
-     */
-    public static final int EDGE_BOTTOM = ViewDragHelper.EDGE_BOTTOM;
-
-    /**
-     * Edge flag set indicating all edges should be affected.
-     */
-    public static final int EDGE_ALL = EDGE_LEFT | EDGE_RIGHT | EDGE_BOTTOM;
-
-    /**
-     * A view is not currently being dragged or animating as a result of a
-     * fling/snap.
-     */
-    public static final int STATE_IDLE = ViewDragHelper.STATE_IDLE;
-
-    /**
-     * A view is currently being dragged. The position is currently changing as
-     * a result of user input or simulated user input.
-     */
-    public static final int STATE_DRAGGING = ViewDragHelper.STATE_DRAGGING;
-
-    /**
-     * A view is currently settling into place as a result of a fling or
-     * predefined non-interactive motion.
-     */
-    public static final int STATE_SETTLING = ViewDragHelper.STATE_SETTLING;
-
-    /**
-     * Default threshold of scroll
-     */
     private static final float DEFAULT_SCROLL_THRESHOLD = 0.3f;
+    private static final int BASE_SETTLE_DURATION = 256; // ms
+    private static final int MAX_SETTLE_DURATION = 600; // ms
 
-    private static final int OVERSCROLL_DISTANCE = 10;
 
-    private static final int[] EDGE_FLAGS = {
-            EDGE_LEFT, EDGE_RIGHT, EDGE_BOTTOM, EDGE_ALL
-    };
+    public static final int DRAG_DIRECTION_NONE = 0;
+    public static final int DRAG_DIRECTION_LEFT_TO_RIGHT = 1;
+    public static final int DRAG_DIRECTION_RIGHT_TO_LEFT = 2;
+    public static final int DRAG_DIRECTION_TOP_TO_BOTTOM = 3;
+    public static final int DRAG_DIRECTION_BOTTOM_TO_TOP = 4;
 
-    private int mEdgeFlag;
+    public static final int EDGE_LEFT = 1;
+    public static final int EDGE_RIGHT = 2;
+    public static final int EDGE_TOP = 4;
+    public static final int EDGE_BOTTOM = 8;
 
-    /**
-     * Threshold of scroll, we will close the activity, when scrollPercent over
-     * this value;
-     */
+
+    public static final int STATE_IDLE = 0;
+    public static final int STATE_DRAGGING = 1;
+    public static final int STATE_SETTLING = 2;
+
+    public static final ViewMoveAction MOVE_VIEW_AUTO = new ViewMoveAuto();
+    public static final ViewMoveAction MOVE_VIEW_LEFT_TO_RIGHT = new ViewMoveLeftToRight();
+    public static final ViewMoveAction MOVE_VIEW_TOP_TO_BOTTOM = new ViewMoveTopToBottom();
+
     private float mScrollThreshold = DEFAULT_SCROLL_THRESHOLD;
 
     private View mContentView;
-
-    private ViewDragHelper mDragHelper;
-
-    private float mScrollPercent;
-
-    private int mContentLeft;
-
-    private int mContentTop;
-
-    /**
-     * The set of listeners to be sent events through.
-     */
     private List<SwipeListener> mListeners;
+    private Callback mCallback;
+    private OnInsetsHandler mOnInsetsHandler;
 
     private Drawable mShadowLeft;
-
     private Drawable mShadowRight;
-
     private Drawable mShadowBottom;
+    private Drawable mShadowTop;
 
     private float mScrimOpacity;
-
     private int mScrimColor = DEFAULT_SCRIM_COLOR;
+    private VelocityTracker mVelocityTracker;
+    private float mMaxVelocity;
+    private float mMinVelocity;
+    private OverScroller mScroller;
+    private int mTouchSlop;
 
-    private boolean mInLayout;
+    private float mInitialMotionX;
+    private float mInitialMotionY;
+    private float mLastMotionX;
+    private float mLastMotionY;
 
-    private Rect mTmpRect = new Rect();
+    private int mDragState = STATE_IDLE;
+    private QMUIViewOffsetHelper mViewOffsetHelper;
+    private ViewMoveAction mViewMoveAction = MOVE_VIEW_AUTO;
 
-    /**
-     * Edge being dragged
-     */
-    private int mTrackingEdge;
+    private int mCurrentDragDirection = 0;
+    private boolean mIsScrollOverValid = true;
+    private boolean mEnableSwipeBack = true;
 
-    private Callback mCallback;
-
-    private boolean mPreventSwipeBackWhenDown = false;
 
     public SwipeBackLayout(Context context) {
         this(context, null);
@@ -159,13 +126,9 @@ public class SwipeBackLayout extends QMUIWindowInsetLayout {
 
     public SwipeBackLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs);
-        mDragHelper = ViewDragHelper.create(this, new ViewDragCallback());
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.SwipeBackLayout, defStyle,
                 R.style.SwipeBackLayout);
-
-        int mode = EDGE_FLAGS[a.getInt(R.styleable.SwipeBackLayout_edge_flag, 0)];
-        setEdgeTrackingEnabled(mode);
 
         int shadowLeft = a.getResourceId(R.styleable.SwipeBackLayout_shadow_left,
                 R.drawable.shadow_left);
@@ -173,14 +136,49 @@ public class SwipeBackLayout extends QMUIWindowInsetLayout {
                 R.drawable.shadow_right);
         int shadowBottom = a.getResourceId(R.styleable.SwipeBackLayout_shadow_bottom,
                 R.drawable.shadow_bottom);
+        int shadowTop = a.getResourceId(R.styleable.SwipeBackLayout_shadow_top,
+                R.drawable.shadow_top);
         setShadow(shadowLeft, EDGE_LEFT);
         setShadow(shadowRight, EDGE_RIGHT);
         setShadow(shadowBottom, EDGE_BOTTOM);
+        setShadow(shadowTop, EDGE_TOP);
         a.recycle();
         final float density = getResources().getDisplayMetrics().density;
         final float minVel = MIN_FLING_VELOCITY * density;
-        mDragHelper.setMinVelocity(minVel);
+        final ViewConfiguration vc = ViewConfiguration.get(context);
+        mTouchSlop = vc.getScaledTouchSlop();
+        mMaxVelocity = vc.getScaledMaximumFlingVelocity();
+        mMinVelocity = minVel;
+        mScroller = new OverScroller(context, QUNITIC_INTERPOLATOR);
+        QMUIWindowInsetHelper.setOnApplyWindowInsetsListener(this, new androidx.core.view.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+                int insetsType = mOnInsetsHandler != null ? mOnInsetsHandler.getInsetsType() : 0;
+                if(insetsType != 0){
+                    Insets toUsed = insets.getInsets(insetsType);
+                    v.setPadding(toUsed.left, toUsed.top, toUsed.right, toUsed.bottom);
+                }else{
+                    v.setPadding(0, 0, 0, 0);
+                }
+                return insets;
+            }
+        }, false);
     }
+
+    public void setEnableSwipeBack(boolean enableSwipeBack) {
+        mEnableSwipeBack = enableSwipeBack;
+    }
+
+    public boolean isEnableSwipeBack() {
+        return mEnableSwipeBack;
+    }
+
+    private final Runnable mSetIdleRunnable = new Runnable() {
+        @Override
+        public void run() {
+            setDragState(STATE_IDLE);
+        }
+    };
 
     /**
      * Set up contentView which will be moved by user gesture
@@ -189,6 +187,11 @@ public class SwipeBackLayout extends QMUIWindowInsetLayout {
      */
     private void setContentView(View view) {
         mContentView = view;
+        mViewOffsetHelper = new QMUIViewOffsetHelper(view);
+    }
+
+    public void setViewMoveAction(@NonNull ViewMoveAction viewMoveAction) {
+        mViewMoveAction = viewMoveAction;
     }
 
     public View getContentView() {
@@ -197,29 +200,6 @@ public class SwipeBackLayout extends QMUIWindowInsetLayout {
 
     public void setCallback(Callback callback) {
         mCallback = callback;
-    }
-
-    private boolean canSwipeBack() {
-        return mCallback == null || mCallback.canSwipeBack();
-    }
-
-    /**
-     * Enable edge tracking for the selected edges of the parent view. The
-     * callback's
-     * {@link ViewDragHelper.Callback#onEdgeTouched(int, int)}
-     * and
-     * {@link ViewDragHelper.Callback#onEdgeDragStarted(int, int)}
-     * methods will only be invoked for edges for which edge tracking has been
-     * enabled.
-     *
-     * @param edgeFlags Combination of edge flags describing the edges to watch
-     * @see #EDGE_LEFT
-     * @see #EDGE_RIGHT
-     * @see #EDGE_BOTTOM
-     */
-    public void setEdgeTrackingEnabled(int edgeFlags) {
-        mEdgeFlag = edgeFlags;
-        mDragHelper.setEdgeTrackingEnabled(mEdgeFlag);
     }
 
     /**
@@ -271,40 +251,8 @@ public class SwipeBackLayout extends QMUIWindowInsetLayout {
         mListeners = null;
     }
 
-    public interface SwipeListener {
-        /**
-         * Invoke when state change
-         *
-         * @param state         flag to describe scroll state
-         * @param scrollPercent scroll percent of this view
-         * @see #STATE_IDLE
-         * @see #STATE_DRAGGING
-         * @see #STATE_SETTLING
-         */
-        void onScrollStateChange(int state, float scrollPercent);
-
-        /**
-         * Invoke when scrolling
-         *
-         * @param edgeFlag      flag to describe edge
-         * @param scrollPercent scroll percent of this view
-         */
-        void onScroll(int edgeFlag, float scrollPercent);
-
-        /**
-         * Invoke when edge touched
-         *
-         * @param edgeFlag edge flag describing the edge being touched
-         * @see #EDGE_LEFT
-         * @see #EDGE_RIGHT
-         * @see #EDGE_BOTTOM
-         */
-        void onEdgeTouch(int edgeFlag);
-
-        /**
-         * Invoke when scroll percent over the threshold for the first time
-         */
-        void onScrollOverThreshold();
+    public void setOnInsetsHandler(OnInsetsHandler insetsHandler) {
+        mOnInsetsHandler = insetsHandler;
     }
 
     /**
@@ -325,9 +273,6 @@ public class SwipeBackLayout extends QMUIWindowInsetLayout {
      *
      * @param shadow   Drawable to use
      * @param edgeFlag Combination of edge flags describing the edge to set
-     * @see #EDGE_LEFT
-     * @see #EDGE_RIGHT
-     * @see #EDGE_BOTTOM
      */
     public void setShadow(Drawable shadow, int edgeFlag) {
         if ((edgeFlag & EDGE_LEFT) != 0) {
@@ -336,6 +281,8 @@ public class SwipeBackLayout extends QMUIWindowInsetLayout {
             mShadowRight = shadow;
         } else if ((edgeFlag & EDGE_BOTTOM) != 0) {
             mShadowBottom = shadow;
+        } else if ((edgeFlag & EDGE_TOP) != 0) {
+            mShadowTop = shadow;
         }
         invalidate();
     }
@@ -353,51 +300,362 @@ public class SwipeBackLayout extends QMUIWindowInsetLayout {
         setShadow(getResources().getDrawable(resId), edgeFlag);
     }
 
+    void setDragState(int state) {
+        removeCallbacks(mSetIdleRunnable);
+        if (mDragState != state) {
+            mDragState = state;
+            onViewDragStateChanged(mDragState);
+        }
+    }
 
-    private boolean preventSwipeBack(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            mPreventSwipeBackWhenDown = !canSwipeBack();
-            return mPreventSwipeBackWhenDown;
+    private boolean isTouchInContentView(float x, float y) {
+        return x >= mContentView.getLeft() && x < mContentView.getRight()
+                && y >= mContentView.getTop() && y < mContentView.getBottom();
+    }
+
+
+    private int selectDragDirection(float x, float y) {
+        final float dx = x - mInitialMotionX;
+        final float dy = y - mInitialMotionY;
+        mCurrentDragDirection = mCallback == null ? DRAG_DIRECTION_NONE :
+                mCallback.getDragDirection(this, mViewMoveAction, mInitialMotionX, mInitialMotionY, dx, dy, mTouchSlop);
+        if(mCurrentDragDirection != DRAG_DIRECTION_NONE){
+            mInitialMotionX = mLastMotionX = x;
+            mInitialMotionY = mLastMotionY = y;
+            onSwipeBackBegin();
+            requestParentDisallowInterceptTouchEvent(true);
+            setDragState(STATE_DRAGGING);
+        }
+        return mCurrentDragDirection;
+    }
+
+    private float getTouchMoveDelta(float x, float y) {
+        if (mCurrentDragDirection == DRAG_DIRECTION_LEFT_TO_RIGHT ||
+                mCurrentDragDirection == DRAG_DIRECTION_RIGHT_TO_LEFT) {
+            return x - mLastMotionX;
         } else {
-            return !canSwipeBack() || mPreventSwipeBackWhenDown;
+            return y - mLastMotionY;
         }
     }
 
     @Override
-    public boolean onInterceptTouchEvent(MotionEvent event) {
-        if (preventSwipeBack(event)) {
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if(!mEnableSwipeBack){
+            cancel();
             return false;
         }
-        try {
-            return mDragHelper.shouldInterceptTouchEvent(event);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            return false;
+
+        final int action = ev.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN) {
+            cancel();
         }
+
+        if (mVelocityTracker == null) {
+            mVelocityTracker = VelocityTracker.obtain();
+        }
+        mVelocityTracker.addMovement(ev);
+
+
+        final float x = ev.getX();
+        final float y = ev.getY();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN: {
+                mInitialMotionX = mLastMotionX = x;
+                mInitialMotionY = mLastMotionY = y;
+                if (mDragState == STATE_SETTLING) {
+                    if (isTouchInContentView(x, y)) {
+                        requestParentDisallowInterceptTouchEvent(true);
+                        setDragState(STATE_DRAGGING);
+                    }
+                }
+                break;
+            }
+
+            case MotionEvent.ACTION_MOVE: {
+                if (mDragState == STATE_IDLE) {
+                    selectDragDirection(x, y);
+                } else if (mDragState == STATE_DRAGGING) {
+                    mViewMoveAction.move(this, mContentView, mViewOffsetHelper,
+                            mCurrentDragDirection, getTouchMoveDelta(x, y));
+                    onScroll();
+                } else {
+                    if (isTouchInContentView(x, y)) {
+                        requestParentDisallowInterceptTouchEvent(true);
+                        setDragState(STATE_DRAGGING);
+                    }
+                }
+                mLastMotionX = x;
+                mLastMotionY = y;
+                break;
+            }
+
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL: {
+                cancel();
+                break;
+            }
+        }
+
+        return mDragState == STATE_DRAGGING;
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (preventSwipeBack(event)) {
+    public boolean onTouchEvent(MotionEvent ev) {
+        if(!mEnableSwipeBack){
+            cancel();
             return false;
         }
-        mDragHelper.processTouchEvent(event);
+
+        final int action = ev.getActionMasked();
+
+        if (action == MotionEvent.ACTION_DOWN) {
+            cancel();
+        }
+
+        if (mVelocityTracker == null) {
+            mVelocityTracker = VelocityTracker.obtain();
+        }
+        mVelocityTracker.addMovement(ev);
+        final float x = ev.getX();
+        final float y = ev.getY();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN: {
+                mInitialMotionX = mLastMotionX = x;
+                mInitialMotionY = mLastMotionY = y;
+                if (mDragState == STATE_SETTLING) {
+                    if (isTouchInContentView(x, y)) {
+                        requestParentDisallowInterceptTouchEvent(true);
+                        setDragState(STATE_DRAGGING);
+                    }
+                }
+                break;
+            }
+
+            case MotionEvent.ACTION_MOVE: {
+                if (mDragState == STATE_IDLE) {
+                    selectDragDirection(x, y);
+                } else if (mDragState == STATE_DRAGGING) {
+                    mViewMoveAction.move(this, mContentView, mViewOffsetHelper,
+                            mCurrentDragDirection, getTouchMoveDelta(x, y));
+                    onScroll();
+                } else {
+                    if (isTouchInContentView(x, y)) {
+                        requestParentDisallowInterceptTouchEvent(true);
+                        setDragState(STATE_DRAGGING);
+                    }
+                }
+                mLastMotionX = x;
+                mLastMotionY = y;
+                break;
+            }
+
+            case MotionEvent.ACTION_UP: {
+                if (mDragState == STATE_DRAGGING) {
+                    releaseViewForPointerUp();
+                }
+                cancel();
+                break;
+            }
+
+            case MotionEvent.ACTION_CANCEL: {
+                if (mDragState == STATE_DRAGGING) {
+                    settleContentViewAt(0, 0,
+                            (int) mVelocityTracker.getXVelocity(),
+                            (int) mVelocityTracker.getYVelocity());
+                }
+                cancel();
+                break;
+            }
+        }
         return true;
+    }
+
+    private void requestParentDisallowInterceptTouchEvent(boolean disallowIntercept) {
+        final ViewParent parent = getParent();
+        if (parent != null) {
+            parent.requestDisallowInterceptTouchEvent(disallowIntercept);
+        }
+    }
+
+    private void releaseViewForPointerUp() {
+        mVelocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
+        int moveEdge = mViewMoveAction.getEdge(mCurrentDragDirection);
+        float v;
+        if(mCurrentDragDirection == DRAG_DIRECTION_LEFT_TO_RIGHT ||
+                mCurrentDragDirection == DRAG_DIRECTION_RIGHT_TO_LEFT){
+            v = clampMag(mVelocityTracker.getXVelocity(), mMinVelocity, mMaxVelocity);
+        }else{
+            v = clampMag(mVelocityTracker.getYVelocity(), mMinVelocity, mMaxVelocity);
+        }
+
+        if (moveEdge == EDGE_LEFT || moveEdge == EDGE_RIGHT) {
+            int target = mViewMoveAction.getSettleTarget(this, mContentView,
+                    v, mCurrentDragDirection, mScrollThreshold);
+            settleContentViewAt(target, 0, (int) v, 0);
+        } else {
+            int target = mViewMoveAction.getSettleTarget(this, mContentView,
+                    v, mCurrentDragDirection, mScrollThreshold);
+            settleContentViewAt(0, target, 0, (int) v);
+        }
+    }
+
+    /**
+     * Settle the captured view at the given (left, top) position.
+     *
+     * @param finalLeft Target left position for the captured view
+     * @param finalTop  Target top position for the captured view
+     * @param xvel      Horizontal velocity
+     * @param yvel      Vertical velocity
+     * @return true if animation should continue through {@link #continueSettling(boolean)} calls
+     */
+    private boolean settleContentViewAt(int finalLeft, int finalTop, int xvel, int yvel) {
+        final int startLeft = mContentView.getLeft();
+        final int startTop = mContentView.getTop();
+        final int dx = finalLeft - startLeft;
+        final int dy = finalTop - startTop;
+
+        if (dx == 0 && dy == 0) {
+            // Nothing to do. Send callbacks, be done.
+            mScroller.abortAnimation();
+            setDragState(STATE_IDLE);
+            return false;
+        }
+
+        final int duration = computeSettleDuration(dx, dy, xvel, yvel);
+        mScroller.startScroll(startLeft, startTop, dx, dy, duration);
+
+        setDragState(STATE_SETTLING);
+        invalidate();
+        return true;
+    }
+
+    public boolean continueSettling(boolean deferCallbacks) {
+        if (mDragState == STATE_SETTLING) {
+            boolean keepGoing = mScroller.computeScrollOffset();
+            final int x = mScroller.getCurrX();
+            final int y = mScroller.getCurrY();
+            mViewOffsetHelper.setOffset(
+                    x - mViewOffsetHelper.getLayoutLeft(),
+                    y - mViewOffsetHelper.getLayoutTop());
+            onScroll();
+
+            if (keepGoing && x == mScroller.getFinalX() && y == mScroller.getFinalY()) {
+                // Close enough. The interpolator/scroller might think we're still moving
+                // but the user sure doesn't.
+                mScroller.abortAnimation();
+                keepGoing = false;
+            }
+
+            if (!keepGoing) {
+                if (deferCallbacks) {
+                    post(mSetIdleRunnable);
+                } else {
+                    setDragState(STATE_IDLE);
+                }
+            }
+        }
+
+        return mDragState == STATE_SETTLING;
+    }
+
+    private int computeSettleDuration(int dx, int dy, int xvel, int yvel) {
+        xvel = clampMag(xvel, (int) mMinVelocity, (int) mMaxVelocity);
+        yvel = clampMag(yvel, (int) mMinVelocity, (int) mMaxVelocity);
+        final int absDx = Math.abs(dx);
+        final int absDy = Math.abs(dy);
+        final int absXVel = Math.abs(xvel);
+        final int absYVel = Math.abs(yvel);
+        final int addedVel = absXVel + absYVel;
+        final int addedDistance = absDx + absDy;
+
+        final float xweight = xvel != 0 ? (float) absXVel / addedVel :
+                (float) absDx / addedDistance;
+        final float yweight = yvel != 0 ? (float) absYVel / addedVel :
+                (float) absDy / addedDistance;
+
+        int range = mViewMoveAction.getDragRange(this, mCurrentDragDirection);
+        int xduration = computeAxisDuration(dx, xvel, range);
+        int yduration = computeAxisDuration(dy, yvel, range);
+
+        return (int) (xduration * xweight + yduration * yweight);
+    }
+
+    private int computeAxisDuration(int delta, int velocity, int motionRange) {
+        if (delta == 0) {
+            return 0;
+        }
+
+        final int width = getWidth();
+        final int halfWidth = width / 2;
+        final float distanceRatio = Math.min(1f, (float) Math.abs(delta) / width);
+        final float distance = halfWidth + halfWidth
+                * distanceInfluenceForSnapDuration(distanceRatio);
+
+        int duration;
+        velocity = Math.abs(velocity);
+        if (velocity > 0) {
+            duration = 4 * Math.round(1000 * Math.abs(distance / velocity));
+        } else if (motionRange != 0) {
+            final float range = (float) Math.abs(delta) / motionRange;
+            duration = (int) ((range + 1) * BASE_SETTLE_DURATION);
+        } else {
+            duration = BASE_SETTLE_DURATION;
+        }
+        return Math.min(duration, MAX_SETTLE_DURATION);
+    }
+
+    private float distanceInfluenceForSnapDuration(float f) {
+        f -= 0.5f; // center the values about 0.
+        f *= 0.3f * (float) Math.PI / 2.0f;
+        return (float) Math.sin(f);
+    }
+
+    /**
+     * Clamp the magnitude of value for absMin and absMax.
+     * If the value is below the minimum, it will be clamped to zero.
+     * If the value is above the maximum, it will be clamped to the maximum.
+     *
+     * @param value  Value to clamp
+     * @param absMin Absolute value of the minimum significant value to return
+     * @param absMax Absolute value of the maximum value to return
+     * @return The clamped value with the same sign as <code>value</code>
+     */
+    private int clampMag(int value, int absMin, int absMax) {
+        final int absValue = Math.abs(value);
+        if (absValue < absMin) return 0;
+        if (absValue > absMax) return value > 0 ? absMax : -absMax;
+        return value;
+    }
+
+    /**
+     * Clamp the magnitude of value for absMin and absMax.
+     * If the value is below the minimum, it will be clamped to zero.
+     * If the value is above the maximum, it will be clamped to the maximum.
+     *
+     * @param value  Value to clamp
+     * @param absMin Absolute value of the minimum significant value to return
+     * @param absMax Absolute value of the maximum value to return
+     * @return The clamped value with the same sign as <code>value</code>
+     */
+    private float clampMag(float value, float absMin, float absMax) {
+        final float absValue = Math.abs(value);
+        if (absValue < absMin) return 0;
+        if (absValue > absMax) return value > 0 ? absMax : -absMax;
+        return value;
+    }
+
+    public void cancel() {
+        if (mVelocityTracker != null) {
+            mVelocityTracker.recycle();
+            mVelocityTracker = null;
+        }
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        mInLayout = true;
-        if (mContentView != null)
-            mContentView.layout(mContentLeft, mContentTop,
-                    mContentLeft + mContentView.getMeasuredWidth(),
-                    mContentTop + mContentView.getMeasuredHeight());
-        mInLayout = false;
-    }
-
-    @Override
-    public void requestLayout() {
-        if (!mInLayout) {
-            super.requestLayout();
+        super.onLayout(changed, left, top, right, bottom);
+        if (mViewOffsetHelper != null) {
+            mViewOffsetHelper.onViewLayout();
         }
     }
 
@@ -407,252 +665,442 @@ public class SwipeBackLayout extends QMUIWindowInsetLayout {
 
         boolean ret = super.drawChild(canvas, child, drawingTime);
         if (mScrimOpacity > 0 && drawContent
-                && mDragHelper.getViewDragState() != ViewDragHelper.STATE_IDLE) {
+                && mDragState != STATE_IDLE) {
             drawShadow(canvas, child);
             drawScrim(canvas, child);
         }
         return ret;
     }
 
+
     private void drawScrim(Canvas canvas, View child) {
         final int baseAlpha = (mScrimColor & 0xff000000) >>> 24;
         final int alpha = (int) (baseAlpha * mScrimOpacity);
         final int color = alpha << 24 | (mScrimColor & 0xffffff);
-
-        if ((mTrackingEdge & EDGE_LEFT) != 0) {
+        int movingEdge = mViewMoveAction.getEdge(mCurrentDragDirection);
+        if ((movingEdge & EDGE_LEFT) != 0) {
             canvas.clipRect(0, 0, child.getLeft(), getHeight());
-        } else if ((mTrackingEdge & EDGE_RIGHT) != 0) {
+        } else if ((movingEdge & EDGE_RIGHT) != 0) {
             canvas.clipRect(child.getRight(), 0, getRight(), getHeight());
-        } else if ((mTrackingEdge & EDGE_BOTTOM) != 0) {
-            canvas.clipRect(child.getLeft(), child.getBottom(), getRight(), getHeight());
+        } else if ((movingEdge & EDGE_BOTTOM) != 0) {
+            canvas.clipRect(0, child.getBottom(), getRight(), getHeight());
+        } else if ((movingEdge & EDGE_TOP) != 0) {
+            canvas.clipRect(0, 0, getRight(), child.getTop());
         }
         canvas.drawColor(color);
     }
 
     private void drawShadow(Canvas canvas, View child) {
-        final Rect childRect = mTmpRect;
-        child.getHitRect(childRect);
 
-        if ((mEdgeFlag & EDGE_LEFT) != 0) {
-            mShadowLeft.setBounds(childRect.left - mShadowLeft.getIntrinsicWidth(),
-                    childRect.top, childRect.left, childRect.bottom);
+
+        int movingEdge = mViewMoveAction.getEdge(mCurrentDragDirection);
+        if ((movingEdge & EDGE_LEFT) != 0) {
+            mShadowLeft.setBounds(child.getLeft() - mShadowLeft.getIntrinsicWidth(),
+                    child.getTop(), child.getLeft(), child.getBottom());
             mShadowLeft.setAlpha((int) (mScrimOpacity * FULL_ALPHA));
             mShadowLeft.draw(canvas);
-        }
-
-        if ((mEdgeFlag & EDGE_RIGHT) != 0) {
-            mShadowRight.setBounds(childRect.right, childRect.top,
-                    childRect.right + mShadowRight.getIntrinsicWidth(), childRect.bottom);
+        } else if ((movingEdge & EDGE_RIGHT) != 0) {
+            mShadowRight.setBounds(child.getRight(), child.getTop(),
+                    child.getRight() + mShadowRight.getIntrinsicWidth(), child.getBottom());
             mShadowRight.setAlpha((int) (mScrimOpacity * FULL_ALPHA));
             mShadowRight.draw(canvas);
-        }
-
-        if ((mEdgeFlag & EDGE_BOTTOM) != 0) {
-            mShadowBottom.setBounds(childRect.left, childRect.bottom, childRect.right,
-                    childRect.bottom + mShadowBottom.getIntrinsicHeight());
+        } else if ((movingEdge & EDGE_BOTTOM) != 0) {
+            mShadowBottom.setBounds(child.getLeft(), child.getBottom(), child.getRight(),
+                    child.getBottom() + mShadowBottom.getIntrinsicHeight());
             mShadowBottom.setAlpha((int) (mScrimOpacity * FULL_ALPHA));
             mShadowBottom.draw(canvas);
+        } else if ((movingEdge & EDGE_TOP) != 0) {
+            mShadowTop.setBounds(child.getLeft(), child.getTop() - mShadowTop.getIntrinsicHeight(),
+                    child.getRight(), child.getTop());
+            mShadowTop.setAlpha((int) (mScrimOpacity * FULL_ALPHA));
+            mShadowTop.draw(canvas);
         }
     }
 
     @Override
     public void computeScroll() {
-        mScrimOpacity = 1 - mScrollPercent;
-        if (mDragHelper.continueSettling(true)) {
+        if (continueSettling(true)) {
             ViewCompat.postInvalidateOnAnimation(this);
         }
     }
 
-    private class ViewDragCallback extends ViewDragHelper.Callback {
-        private boolean mIsScrollOverValid;
-
-        @Override
-        public boolean tryCaptureView(View view, int i) {
-            boolean ret = mDragHelper.isEdgeTouched(mEdgeFlag, i);
-            if (ret) {
-                if (mDragHelper.isEdgeTouched(EDGE_LEFT, i)) {
-                    mTrackingEdge = EDGE_LEFT;
-                } else if (mDragHelper.isEdgeTouched(EDGE_RIGHT, i)) {
-                    mTrackingEdge = EDGE_RIGHT;
-                } else if (mDragHelper.isEdgeTouched(EDGE_BOTTOM, i)) {
-                    mTrackingEdge = EDGE_BOTTOM;
-                }
-                if (mListeners != null && !mListeners.isEmpty()) {
-                    for (SwipeListener listener : mListeners) {
-                        listener.onEdgeTouch(mTrackingEdge);
-                    }
-                }
-                mIsScrollOverValid = true;
-            }
-            boolean directionCheck = false;
-            if (mEdgeFlag == EDGE_LEFT || mEdgeFlag == EDGE_RIGHT) {
-                directionCheck = !mDragHelper.checkTouchSlop(ViewDragHelper.DIRECTION_VERTICAL, i);
-            } else if (mEdgeFlag == EDGE_BOTTOM) {
-                directionCheck = !mDragHelper
-                        .checkTouchSlop(ViewDragHelper.DIRECTION_HORIZONTAL, i);
-            } else if (mEdgeFlag == EDGE_ALL) {
-                directionCheck = true;
-            }
-            return ret & directionCheck;
-        }
-
-        @Override
-        public int getViewHorizontalDragRange(View child) {
-            return mEdgeFlag & (EDGE_LEFT | EDGE_RIGHT);
-        }
-
-        @Override
-        public int getViewVerticalDragRange(View child) {
-            return mEdgeFlag & EDGE_BOTTOM;
-        }
-
-        @Override
-        public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
-            super.onViewPositionChanged(changedView, left, top, dx, dy);
-            if ((mTrackingEdge & EDGE_LEFT) != 0) {
-                mScrollPercent = Math.abs((float) left
-                        / (mContentView.getWidth() + mShadowLeft.getIntrinsicWidth()));
-            } else if ((mTrackingEdge & EDGE_RIGHT) != 0) {
-                mScrollPercent = Math.abs((float) left
-                        / (mContentView.getWidth() + mShadowRight.getIntrinsicWidth()));
-            } else if ((mTrackingEdge & EDGE_BOTTOM) != 0) {
-                mScrollPercent = Math.abs((float) top
-                        / (mContentView.getHeight() + mShadowBottom.getIntrinsicHeight()));
-            }
-            mContentLeft = left;
-            mContentTop = top;
-            invalidate();
-            if (mScrollPercent < mScrollThreshold && !mIsScrollOverValid) {
-                mIsScrollOverValid = true;
-            }
-            if (mListeners != null && !mListeners.isEmpty()) {
-                if (mDragHelper.getViewDragState() == STATE_DRAGGING &&
-                        mScrollPercent >= mScrollThreshold && mIsScrollOverValid) {
-                    mIsScrollOverValid = false;
-                    for (SwipeListener listener : mListeners) {
-                        listener.onScrollOverThreshold();
-                    }
-                }
-                for (SwipeListener listener : mListeners) {
-                    listener.onScroll(mTrackingEdge, mScrollPercent);
-                }
+    private void onSwipeBackBegin() {
+        mIsScrollOverValid = true;
+        mScrimOpacity = 1 - mViewMoveAction.getCurrentPercent(this, mContentView, mCurrentDragDirection);
+        if (mListeners != null && !mListeners.isEmpty()) {
+            for (SwipeListener listener : mListeners) {
+                listener.onSwipeBackBegin(mCurrentDragDirection, mViewMoveAction.getEdge(mCurrentDragDirection));
             }
         }
+        invalidate();
+    }
 
-        @Override
-        public void onViewReleased(View releasedChild, float xvel, float yvel) {
-            final int childWidth = releasedChild.getWidth();
-            final int childHeight = releasedChild.getHeight();
-
-            int left = 0, top = 0;
-            if ((mTrackingEdge & EDGE_LEFT) != 0) {
-                left = xvel > 0 || xvel == 0 && mScrollPercent > mScrollThreshold ? childWidth
-                        + mShadowLeft.getIntrinsicWidth() + OVERSCROLL_DISTANCE : 0;
-            } else if ((mTrackingEdge & EDGE_RIGHT) != 0) {
-                left = xvel < 0 || xvel == 0 && mScrollPercent > mScrollThreshold ? -(childWidth
-                        + mShadowLeft.getIntrinsicWidth() + OVERSCROLL_DISTANCE) : 0;
-            } else if ((mTrackingEdge & EDGE_BOTTOM) != 0) {
-                top = yvel < 0 || yvel == 0 && mScrollPercent > mScrollThreshold ? -(childHeight
-                        + mShadowBottom.getIntrinsicHeight() + OVERSCROLL_DISTANCE) : 0;
-            }
-
-            mDragHelper.settleCapturedViewAt(left, top);
-            invalidate();
+    private void onScroll() {
+        float scrollPercent = mViewMoveAction.getCurrentPercent(this, mContentView, mCurrentDragDirection);
+        mScrimOpacity = 1 - mViewMoveAction.getCurrentPercent(this, mContentView, mCurrentDragDirection);
+        if (scrollPercent < mScrollThreshold && !mIsScrollOverValid) {
+            mIsScrollOverValid = true;
         }
-
-        @Override
-        public int clampViewPositionHorizontal(View child, int left, int dx) {
-            int ret = 0;
-            if ((mEdgeFlag & EDGE_LEFT) != 0) {
-                ret = Math.min(child.getWidth(), Math.max(left, 0));
-            } else if ((mEdgeFlag & EDGE_RIGHT) != 0) {
-                ret = Math.min(0, Math.max(left, -child.getWidth()));
-            }
-            return ret;
+        if (mDragState == STATE_DRAGGING && mIsScrollOverValid &&
+                scrollPercent >= mScrollThreshold) {
+            mIsScrollOverValid = false;
+            onScrollOverThreshold();
         }
-
-        @Override
-        public int clampViewPositionVertical(View child, int top, int dy) {
-            int ret = 0;
-            if ((mEdgeFlag & EDGE_BOTTOM) != 0) {
-                ret = Math.min(0, Math.max(top, -child.getHeight()));
+        if (mListeners != null && !mListeners.isEmpty()) {
+            for (SwipeListener listener : mListeners) {
+                listener.onScroll(mCurrentDragDirection, mViewMoveAction.getEdge(mCurrentDragDirection), scrollPercent);
             }
-            return ret;
         }
+        invalidate();
+    }
 
-        @Override
-        public void onViewDragStateChanged(int state) {
-            super.onViewDragStateChanged(state);
-            if (mListeners != null && !mListeners.isEmpty()) {
-                for (SwipeListener listener : mListeners) {
-                    listener.onScrollStateChange(state, mScrollPercent);
-                }
+    private void onScrollOverThreshold() {
+        if (mListeners != null && !mListeners.isEmpty()) {
+            for (SwipeListener listener : mListeners) {
+                listener.onScrollOverThreshold();
             }
         }
     }
 
-    @Override
-    public void clearAnimation() {
-        // bugfix: FragmentManagerImpl -> endAnimatingAwayFragments only calls clearAnimation,
-        // but does not call endViewTransition. this may freeze the UI. #399
-        // It's fine in Android P because OneShotPreDrawListener in EndViewTransitionAnimator
-        // has a chance to run, I haven't found the reason why it was called temporarily.
-        super.clearAnimation();
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.P && mCallback != null
-                && mCallback.needFixFragmentManagerEndAnimatingAwayError()){
-            if(getParent() != null){
-                ((ViewGroup) getParent()).endViewTransition(SwipeBackLayout.this);
+    private void onViewDragStateChanged(int dragState) {
+        if (mListeners != null && !mListeners.isEmpty()) {
+            for (SwipeListener listener : mListeners) {
+                listener.onScrollStateChange(dragState,
+                        mViewMoveAction.getCurrentPercent(this, mContentView, mCurrentDragDirection));
             }
         }
     }
 
-    public static SwipeBackLayout wrap(View child, int edgeFlag, Callback callback) {
+    public void resetOffset(){
+        if(mViewOffsetHelper != null){
+            mViewOffsetHelper.setOffset(0, 0);
+        }
+    }
+
+    public static SwipeBackLayout wrap(View child, ViewMoveAction viewMoveAction, Callback callback) {
         SwipeBackLayout wrapper = new SwipeBackLayout(child.getContext());
-        wrapper.setEdgeTrackingEnabled(edgeFlag);
         wrapper.addView(child, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         wrapper.setContentView(child);
+        wrapper.setViewMoveAction(viewMoveAction);
         wrapper.setCallback(callback);
         return wrapper;
     }
 
-    public static SwipeBackLayout wrap(Context context, int childRes, int edgeFlag, Callback callback) {
+    public static SwipeBackLayout wrap(Context context, int childRes, ViewMoveAction viewMoveAction, Callback callback) {
         SwipeBackLayout wrapper = new SwipeBackLayout(context);
-        wrapper.setEdgeTrackingEnabled(edgeFlag);
         View child = LayoutInflater.from(context).inflate(childRes, wrapper, false);
         wrapper.addView(child, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         wrapper.setContentView(child);
         wrapper.setCallback(callback);
+        wrapper.setViewMoveAction(viewMoveAction);
         return wrapper;
     }
 
-    static void offsetInEdgeTouch(View view, int edgeFlag, int offset){
+    public static void translateInSwipeBack(View view, int edgeFlag, int targetOffset){
         if (edgeFlag == EDGE_BOTTOM) {
-            ViewCompat.offsetTopAndBottom(view, offset);
+            view.setTranslationY(targetOffset);
+            view.setTranslationX(0);
         } else if (edgeFlag == EDGE_RIGHT) {
-            ViewCompat.offsetLeftAndRight(view, offset);
-        } else {
-            ViewCompat.offsetLeftAndRight(view, -1 * offset);
+            view.setTranslationY(0);
+            view.setTranslationX(targetOffset);
+        } else if(edgeFlag == EDGE_LEFT){
+            view.setTranslationY(0);
+            view.setTranslationX(-targetOffset);
+        }else{
+            view.setTranslationY(-targetOffset);
+            view.setTranslationX(0);
         }
     }
 
-    static void offsetInScroll(View view, int edgeFlag, int targetOffset){
-        if (edgeFlag == EDGE_BOTTOM) {
-            ViewCompat.offsetTopAndBottom(view, targetOffset - view.getTop());
-        } else if (edgeFlag == EDGE_RIGHT) {
-            ViewCompat.offsetLeftAndRight(view, targetOffset - view.getLeft());
-        } else {
-            ViewCompat.offsetLeftAndRight(view, -targetOffset - view.getLeft());
+    public float getXFraction() {
+        int width = getWidth();
+        if(width == 0){
+            ViewParent parent = getParent();
+            if(parent instanceof ViewGroup){
+                width = ((ViewGroup)parent).getWidth();
+            }
         }
+        return (width == 0) ? 0 : getX() / (float) width;
+    }
+
+    public void setXFraction(float xFraction) {
+        int width = getWidth();
+        if(width == 0){
+            ViewParent parent = getParent();
+            if(parent instanceof ViewGroup){
+                width = ((ViewGroup)parent).getWidth();
+            }
+        }
+        setX((width > 0) ? (xFraction * width) : 0);
+    }
+
+    public float getYFraction() {
+        int height = getHeight();
+        if(height == 0){
+            ViewParent parent = getParent();
+            if(parent instanceof ViewGroup){
+                height = ((ViewGroup)parent).getHeight();
+            }
+        }
+        return (height == 0) ? 0 : getY() / (float) height;
+    }
+
+    public void setYFraction(float yFraction) {
+        int height = getHeight();
+        if(height == 0){
+            ViewParent parent = getParent();
+            if(parent instanceof ViewGroup){
+                height = ((ViewGroup)parent).getHeight();
+            }
+        }
+        setY((height > 0) ? (yFraction * height) : 0);
     }
 
     public interface Callback {
-        boolean canSwipeBack();
-        boolean needFixFragmentManagerEndAnimatingAwayError();
+        int getDragDirection(SwipeBackLayout swipeBackLayout, ViewMoveAction moveAction,
+                             float downX, float downY, float dx, float dy, float touchSlop);
+    }
+
+    public interface ViewMoveAction {
+        float getCurrentPercent(@NonNull SwipeBackLayout swipeBackLayout,
+                                @NonNull View contentView, int dragDirection);
+
+        int getDragRange(@NonNull SwipeBackLayout swipeBackLayout, int dragDirection);
+
+        int getSettleTarget(@NonNull SwipeBackLayout swipeBackLayout,
+                            @NonNull View contentView,
+                            float v, int dragDirection, float scrollThreshold);
+
+        int getEdge(int dragDirection);
+
+        void move(@NonNull SwipeBackLayout swipeBackLayout,
+                  @NonNull View contentView,
+                  @NonNull QMUIViewOffsetHelper offsetHelper,
+                  int dragDirection, float delta);
     }
 
     public interface ListenerRemover {
         void remove();
+    }
+
+    public interface SwipeListener {
+        /**
+         * Invoke when state change
+         *
+         * @param state         flag to describe scroll state
+         * @param scrollPercent scroll percent of this view
+         * @see #STATE_IDLE
+         * @see #STATE_DRAGGING
+         * @see #STATE_SETTLING
+         */
+        void onScrollStateChange(int state, float scrollPercent);
+
+        /**
+         * Invoke when scrolling
+         *
+         * @param moveEdge      flag to describe edge
+         * @param scrollPercent scroll percent of this view
+         */
+        void onScroll(int dragDirection, int moveEdge, float scrollPercent);
+
+        /**
+         * Invoke when swipe back begin.
+         */
+        void onSwipeBackBegin(int dragDirection, int moveEdge);
+
+        /**
+         * Invoke when scroll percent over the threshold for the first time
+         */
+        void onScrollOverThreshold();
+    }
+
+    public interface OnInsetsHandler {
+        @WindowInsetsCompat.Type.InsetsType
+        int getInsetsType();
+    }
+
+    public static class ViewMoveAuto implements ViewMoveAction {
+
+        private boolean isHor(int dragDirection){
+            return dragDirection == DRAG_DIRECTION_RIGHT_TO_LEFT ||
+                    dragDirection == DRAG_DIRECTION_LEFT_TO_RIGHT;
+        }
+
+        @Override
+        public float getCurrentPercent(@NonNull SwipeBackLayout swipeBackLayout,
+                                       @NonNull View contentView, int dragDirection) {
+            float percent;
+            if(isHor(dragDirection)){
+                percent = Math.abs(contentView.getLeft() * 1f / swipeBackLayout.getWidth());
+            }else{
+                percent = Math.abs(contentView.getTop() * 1f / swipeBackLayout.getHeight());
+            }
+            return QMUILangHelper.constrain(percent, 0f, 1f);
+        }
+
+        @Override
+        public int getDragRange(@NonNull SwipeBackLayout swipeBackLayout, int dragDirection) {
+            if(isHor(dragDirection)){
+                return swipeBackLayout.getWidth();
+            }
+            return swipeBackLayout.getHeight();
+        }
+
+        @Override
+        public int getSettleTarget(@NonNull SwipeBackLayout swipeBackLayout,
+                                   @NonNull View contentView,
+                                   float v, int dragDirection, float scrollThreshold) {
+            if(dragDirection == DRAG_DIRECTION_LEFT_TO_RIGHT){
+                if (v > 0 ||
+                        (v == 0 && getCurrentPercent(swipeBackLayout, contentView, dragDirection) > scrollThreshold)) {
+                    return swipeBackLayout.getWidth();
+                }
+            }else if(dragDirection == DRAG_DIRECTION_RIGHT_TO_LEFT){
+                if (v < 0 ||
+                        (v == 0 && getCurrentPercent(swipeBackLayout, contentView, dragDirection) > scrollThreshold)) {
+                    return -swipeBackLayout.getWidth();
+                }
+            }else if(dragDirection == DRAG_DIRECTION_TOP_TO_BOTTOM){
+                if (v > 0 ||
+                        (v == 0 && getCurrentPercent(swipeBackLayout, contentView, dragDirection) > scrollThreshold)) {
+                    return swipeBackLayout.getHeight();
+                }
+            }else{
+                if (v < 0 ||
+                        (v == 0 && getCurrentPercent(swipeBackLayout, contentView, dragDirection) > scrollThreshold)) {
+                    return -swipeBackLayout.getHeight();
+                }
+            }
+
+            return 0;
+        }
+
+        @Override
+        public int getEdge(int dragDirection) {
+            if(dragDirection == DRAG_DIRECTION_LEFT_TO_RIGHT){
+                return EDGE_LEFT;
+            }else if(dragDirection == DRAG_DIRECTION_RIGHT_TO_LEFT){
+                return EDGE_RIGHT;
+            }else if(dragDirection == DRAG_DIRECTION_TOP_TO_BOTTOM){
+                return EDGE_TOP;
+            }else{
+                return EDGE_BOTTOM;
+            }
+        }
+
+        @Override
+        public void move(@NonNull SwipeBackLayout swipeBackLayout,
+                         @NonNull View contentView,
+                         @NonNull QMUIViewOffsetHelper offsetHelper,
+                         int dragDirection, float delta) {
+            if(dragDirection == DRAG_DIRECTION_LEFT_TO_RIGHT){
+                int target = (int) (offsetHelper.getLeftAndRightOffset() + delta);
+                target = QMUILangHelper.constrain(target, 0, swipeBackLayout.getWidth());
+                offsetHelper.setLeftAndRightOffset(target);
+            }else if(dragDirection == DRAG_DIRECTION_RIGHT_TO_LEFT){
+                int target = (int) (offsetHelper.getLeftAndRightOffset() + delta);
+                target = QMUILangHelper.constrain(target, -swipeBackLayout.getWidth(),0);
+                offsetHelper.setLeftAndRightOffset(target);
+            }else if(dragDirection == DRAG_DIRECTION_TOP_TO_BOTTOM){
+                int target = (int) (offsetHelper.getTopAndBottomOffset() + delta);
+                target = QMUILangHelper.constrain(target, 0, swipeBackLayout.getHeight());
+                offsetHelper.setTopAndBottomOffset(target);
+            }else{
+                int target = (int) (offsetHelper.getTopAndBottomOffset() + delta);
+                target = QMUILangHelper.constrain(target, -swipeBackLayout.getHeight(),0);
+                offsetHelper.setTopAndBottomOffset(target);
+            }
+
+        }
+    }
+
+    public static class ViewMoveLeftToRight implements ViewMoveAction {
+
+        @Override
+        public float getCurrentPercent(@NonNull SwipeBackLayout swipeBackLayout,
+                                       @NonNull View contentView, int dragDirection) {
+            return QMUILangHelper.constrain(
+                    contentView.getLeft() * 1f / swipeBackLayout.getWidth(), 0f, 1f);
+        }
+
+        @Override
+        public int getDragRange(@NonNull SwipeBackLayout swipeBackLayout, int dragDirection) {
+            return swipeBackLayout.getWidth();
+        }
+
+        @Override
+        public int getSettleTarget(@NonNull SwipeBackLayout swipeBackLayout,
+                                   @NonNull View contentView,
+                                   float v, int dragDirection, float scrollThreshold) {
+            if (v > 0 ||
+                    (v == 0 && getCurrentPercent(swipeBackLayout, contentView, dragDirection) > scrollThreshold)) {
+                return swipeBackLayout.getWidth();
+            }
+            return 0;
+        }
+
+        @Override
+        public int getEdge(int dragDirection) {
+            return EDGE_LEFT;
+        }
+
+        @Override
+        public void move(@NonNull SwipeBackLayout swipeBackLayout,
+                         @NonNull View contentView,
+                         @NonNull QMUIViewOffsetHelper offsetHelper, int dragDirection, float delta) {
+            if (dragDirection == DRAG_DIRECTION_BOTTOM_TO_TOP ||
+                    dragDirection == DRAG_DIRECTION_TOP_TO_BOTTOM) {
+                delta = delta * swipeBackLayout.getWidth() / swipeBackLayout.getHeight();
+            }
+            int target = (int) (offsetHelper.getLeftAndRightOffset() + delta);
+            target = QMUILangHelper.constrain(target, 0, swipeBackLayout.getWidth());
+            offsetHelper.setLeftAndRightOffset(target);
+        }
+    }
+
+    public static class ViewMoveTopToBottom implements ViewMoveAction {
+
+        @Override
+        public float getCurrentPercent(@NonNull SwipeBackLayout swipeBackLayout,
+                                       @NonNull View contentView, int dragDirection) {
+            return QMUILangHelper.constrain(
+                    contentView.getTop() * 1f / swipeBackLayout.getHeight(), 0f, 1f);
+        }
+
+        @Override
+        public int getDragRange(@NonNull SwipeBackLayout swipeBackLayout, int dragDirection) {
+            return swipeBackLayout.getHeight();
+        }
+
+        @Override
+        public int getSettleTarget(@NonNull SwipeBackLayout swipeBackLayout,
+                                   @NonNull View contentView,
+                                   float v, int dragDirection, float scrollThreshold) {
+            if (v > 0 ||
+                    (v == 0 && getCurrentPercent(swipeBackLayout, contentView, dragDirection) > scrollThreshold)) {
+                return swipeBackLayout.getHeight();
+            }
+            return 0;
+        }
+
+        @Override
+        public int getEdge(int dragDirection) {
+            return EDGE_TOP;
+        }
+
+        @Override
+        public void move(@NonNull SwipeBackLayout swipeBackLayout,
+                         @NonNull View contentView,
+                         @NonNull QMUIViewOffsetHelper offsetHelper, int dragDirection, float delta) {
+            if (dragDirection == DRAG_DIRECTION_LEFT_TO_RIGHT ||
+                    dragDirection == DRAG_DIRECTION_RIGHT_TO_LEFT) {
+                delta = delta * swipeBackLayout.getHeight() / swipeBackLayout.getWidth();
+            }
+            int target = (int) (offsetHelper.getTopAndBottomOffset() + delta);
+            target = QMUILangHelper.constrain(target, 0, swipeBackLayout.getHeight());
+            offsetHelper.setTopAndBottomOffset(target);
+        }
     }
 }

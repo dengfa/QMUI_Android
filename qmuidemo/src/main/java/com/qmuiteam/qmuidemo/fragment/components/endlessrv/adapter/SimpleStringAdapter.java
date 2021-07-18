@@ -1,11 +1,10 @@
 package com.qmuiteam.qmuidemo.fragment.components.endlessrv.adapter;
 
-import android.support.annotation.NonNull;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,8 +32,8 @@ public class SimpleStringAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     /**
      * @param layoutManager 管理器
-     * @param pending       加载更多的高度 或者 宽度
-     * @param strings       数据
+     * @param pending 加载更多的高度 或者 宽度
+     * @param strings 数据
      */
     public SimpleStringAdapter(LinearLayoutManager layoutManager, int pending, ArrayList<String> strings) {
         mValues = strings;
@@ -75,9 +74,7 @@ public class SimpleStringAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         mValues.addAll(0, items);
         notifyDataSetChanged();
         layoutManager.scrollToPositionWithOffset(items.size() + 1, pending);
-
     }
-
 
     public void clear() {
         mValues.clear();

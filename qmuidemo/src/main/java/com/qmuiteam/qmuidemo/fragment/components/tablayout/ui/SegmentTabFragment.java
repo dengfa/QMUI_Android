@@ -2,14 +2,14 @@ package com.qmuiteam.qmuidemo.fragment.components.tablayout.ui;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import butterknife.ButterKnife;
 import com.qmuiteam.qmui.tablayout.SegmentTabLayout;
 import com.qmuiteam.qmui.tablayout.listener.OnTabSelectListener;
@@ -26,7 +26,6 @@ public class SegmentTabFragment extends BaseFragment {
     private String[] mTitles = { "首页", "消息" };
     private String[] mTitles_2 = { "首页", "消息", "联系人" };
     private String[] mTitles_3 = { "首页", "消息", "联系人", "更多" };
-    private View mDecorView;
     private SegmentTabLayout mTabLayout_3;
 
     @Override
@@ -39,7 +38,6 @@ public class SegmentTabFragment extends BaseFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mDecorView = view;
         for (String title : mTitles_3) {
             mFragments.add(SimpleCardFragment.getInstance("Switch ViewPager " + title));
         }
@@ -50,13 +48,13 @@ public class SegmentTabFragment extends BaseFragment {
 
         SegmentTabLayout tabLayout_1 = ViewFindUtils.find(view, R.id.tl_1);
         SegmentTabLayout tabLayout_2 = ViewFindUtils.find(view, R.id.tl_2);
-        mTabLayout_3 = ViewFindUtils.find(mDecorView, R.id.tl_3);
+        mTabLayout_3 = ViewFindUtils.find(view, R.id.tl_3);
         SegmentTabLayout tabLayout_4 = ViewFindUtils.find(view, R.id.tl_4);
         SegmentTabLayout tabLayout_5 = ViewFindUtils.find(view, R.id.tl_5);
 
         tabLayout_1.setTabData(mTitles);
         tabLayout_2.setTabData(mTitles_2);
-        tl_3();
+        tl_3(view);
         tabLayout_4.setTabData(mTitles_2, getActivity(), R.id.fl_change, mFragments2);
         tabLayout_5.setTabData(mTitles_3);
 
@@ -74,8 +72,8 @@ public class SegmentTabFragment extends BaseFragment {
         }
     }
 
-    private void tl_3() {
-        final ViewPager vp_3 = ViewFindUtils.find(mDecorView, R.id.vp_2);
+    private void tl_3(View view) {
+        final ViewPager vp_3 = ViewFindUtils.find(view, R.id.vp_2);
         vp_3.setAdapter(new MyPagerAdapter(getChildFragmentManager()));
 
         mTabLayout_3.setTabData(mTitles_3);
@@ -124,6 +122,7 @@ public class SegmentTabFragment extends BaseFragment {
             return mTitles_3[position];
         }
 
+        @NonNull
         @Override
         public Fragment getItem(int position) {
             return mFragments.get(position);

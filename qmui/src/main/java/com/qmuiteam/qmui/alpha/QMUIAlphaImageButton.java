@@ -17,11 +17,10 @@
 package com.qmuiteam.qmui.alpha;
 
 import android.content.Context;
-import android.support.v7.widget.AppCompatImageButton;
+import androidx.appcompat.widget.AppCompatImageButton;
 import android.util.AttributeSet;
-import android.widget.ImageButton;
 
-public class QMUIAlphaImageButton extends AppCompatImageButton {
+public class QMUIAlphaImageButton extends AppCompatImageButton implements QMUIAlphaViewInf {
 
     private QMUIAlphaViewHelper mAlphaViewHelper;
 
@@ -61,6 +60,7 @@ public class QMUIAlphaImageButton extends AppCompatImageButton {
      *
      * @param changeAlphaWhenPress 是否要在 press 时改变透明度
      */
+    @Override
     public void setChangeAlphaWhenPress(boolean changeAlphaWhenPress) {
         getAlphaViewHelper().setChangeAlphaWhenPress(changeAlphaWhenPress);
     }
@@ -70,6 +70,7 @@ public class QMUIAlphaImageButton extends AppCompatImageButton {
      *
      * @param changeAlphaWhenDisable 是否要在 disabled 时改变透明度
      */
+    @Override
     public void setChangeAlphaWhenDisable(boolean changeAlphaWhenDisable) {
         getAlphaViewHelper().setChangeAlphaWhenDisable(changeAlphaWhenDisable);
     }

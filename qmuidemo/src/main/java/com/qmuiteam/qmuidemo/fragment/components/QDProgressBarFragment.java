@@ -20,10 +20,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 
 import com.qmuiteam.qmui.widget.QMUIProgressBar;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
+import com.qmuiteam.qmui.widget.roundwidget.QMUIRoundButton;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.base.BaseFragment;
 import com.qmuiteam.qmuidemo.lib.annotation.Widget;
@@ -51,9 +51,9 @@ public class QDProgressBarFragment extends BaseFragment {
     @BindView(R.id.circleProgressBar)
     QMUIProgressBar mCircleProgressBar;
     @BindView(R.id.startBtn)
-    Button mStartBtn;
+    QMUIRoundButton mStartBtn;
     @BindView(R.id.backBtn)
-    Button mBackBtn;
+    QMUIRoundButton mBackBtn;
     int count;
 
     private QDItemDescription mQDItemDescription;
@@ -90,10 +90,10 @@ public class QDProgressBarFragment extends BaseFragment {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        for (int i = 0; i <= 20; i++) {
+                        for (int i = 0; i <= 100; i++) {
                             try {
-                                count = (i + 1) * 5;
-                                if (i == 20) {
+                                count = i + 1;
+                                if (i == 5) {
                                     Message msg = new Message();
                                     msg.what = STOP;
                                     myHandler.sendMessage(msg);

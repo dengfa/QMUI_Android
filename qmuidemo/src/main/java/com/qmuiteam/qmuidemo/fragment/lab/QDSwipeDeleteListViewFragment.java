@@ -19,7 +19,7 @@ package com.qmuiteam.qmuidemo.fragment.lab;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
-import android.support.v4.util.LongSparseArray;
+import androidx.collection.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,6 +29,7 @@ import android.view.ViewTreeObserver;
 import android.widget.ListView;
 
 import com.qmuiteam.qmui.widget.QMUITopBar;
+import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmuidemo.manager.QDDataManager;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.adaptor.QDSimpleAdapter;
@@ -52,7 +53,7 @@ public class QDSwipeDeleteListViewFragment extends BaseFragment {
     private static final int SWIPE_DURATION = 250;
     private static final int MOVE_DURATION = 150;
 
-    @BindView(R.id.topbar) QMUITopBar mTopBar;
+    @BindView(R.id.topbar) QMUITopBarLayout mTopBar;
     @BindView(R.id.listview) ListView mListView;
     LongSparseArray<Integer> mItemIdTopMap = new LongSparseArray<>();
 

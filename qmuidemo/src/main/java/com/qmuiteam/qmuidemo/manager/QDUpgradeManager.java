@@ -24,7 +24,7 @@ import android.content.Context;
  */
 
 public class QDUpgradeManager {
-    public static final int INVALIDATE_VERSION_CODE = -1;
+    public static final int INVALIDATE_VERSION_CODE = 0;
 
     public static final int VERSION_1_1_0 = 110;
     public static final int VERSION_1_1_1 = 111;
@@ -37,7 +37,23 @@ public class QDUpgradeManager {
     public static final int VERSION_1_1_8 = 118;
     public static final int VERSION_1_1_9 = 119;
     public static final int VERSION_1_1_10 = 1110;
-    private static final int sCurrentVersion = VERSION_1_1_10;
+    public static final int VERSION_1_1_11 = 1111;
+    public static final int VERSION_1_1_12 = 1112;
+    public static final int VERSION_1_2_0 = 120;
+    public static final int VERSION_1_3_1 = 131;
+    public static final int VERSION_1_4_0 = 140;
+    public static final int VERSION_2_0_0_alpha1 = -2001;
+    public static final int VERSION_2_0_0_alpha2 = -2002;
+    public static final int VERSION_2_0_0_alpha3 = -2003;
+    public static final int VERSION_2_0_0_alpha4 = -2004;
+    public static final int VERSION_2_0_0_alpha5 = -2005;
+    public static final int VERSION_2_0_0_alpha6 = -2006;
+    public static final int VERSION_2_0_0_alpha7 = -2007;
+    public static final int VERSION_2_0_0_alpha8 = -2008;
+    public static final int VERSION_2_0_0_alpha9 = -2009;
+    public static final int VERSION_2_0_0_alpha10 = -2010;
+    public static final int VERSION_2_0_0_alpha11 = -2011;
+    private static final int sCurrentVersion = VERSION_2_0_0_alpha11;
     private static QDUpgradeManager sQDUpgradeManager = null;
     private UpgradeTipTask mUpgradeTipTask;
 
@@ -57,7 +73,19 @@ public class QDUpgradeManager {
     public void check() {
         int oldVersion = QDPreferenceManager.getInstance(mContext).getVersionCode();
         int currentVersion = sCurrentVersion;
-        if (currentVersion > oldVersion) {
+        boolean versionUpdated = false;
+        if(currentVersion != oldVersion){
+            if(currentVersion < 0){
+                // alpha release
+                if(-currentVersion > oldVersion){
+                    versionUpdated = true;
+                }
+            }else if (currentVersion > oldVersion) {
+                versionUpdated = true;
+            }
+        }
+
+        if(versionUpdated){
             if (oldVersion == INVALIDATE_VERSION_CODE) {
                 onNewInstall(currentVersion);
             } else {

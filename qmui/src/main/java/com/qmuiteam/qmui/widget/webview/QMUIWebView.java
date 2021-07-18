@@ -18,26 +18,28 @@ package com.qmuiteam.qmui.widget.webview;
 
 import android.content.Context;
 import android.graphics.Rect;
-import android.support.annotation.NonNull;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.view.WindowInsetsCompat;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.WindowInsets;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.annotation.NonNull;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import com.qmuiteam.qmui.util.QMUIDisplayHelper;
-import com.qmuiteam.qmui.util.QMUINotchHelper;
 import com.qmuiteam.qmui.util.QMUIWindowInsetHelper;
-import com.qmuiteam.qmui.widget.IWindowInsetLayout;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
-public class QMUIWebView extends WebView implements IWindowInsetLayout {
+public class QMUIWebView extends WebView {
 
     private static final String TAG = "QMUIWebView";
     private static boolean sIsReflectionOccurError = false;
@@ -52,9 +54,7 @@ public class QMUIWebView extends WebView implements IWindowInsetLayout {
      */
     private boolean mNeedDispatchSafeAreaInset = false;
     private Callback mCallback;
-    private OnScrollChangeListener mOnScrollChangeListener;
-    private QMUIWindowInsetHelper mWindowInsetHelper;
-
+    private List<OnScrollChangeListener> mOnScrollChangeListeners = new ArrayList<>();
 
     public QMUIWebView(Context context) {
         super(context);
@@ -72,19 +72,55 @@ public class QMUIWebView extends WebView implements IWindowInsetLayout {
     }
 
     private void init() {
-        mWindowInsetHelper = new QMUIWindowInsetHelper(this, this);
+        removeJavascriptInterface("searchBoxJavaBridge_");
+        removeJavascriptInterface("accessibility");
+        removeJavascriptInterface("accessibilityTraversal");
+        QMUIWindowInsetHelper.handleWindowInsets(this, WindowInsetsCompat.Type.statusBars() | WindowInsetsCompat.Type.displayCutout(), new QMUIWindowInsetHelper.InsetHandler() {
+            @Override
+            public void handleInset(View view, Insets insets) {
+                if (mNeedDispatchSafeAreaInset) {
+                    float density = QMUIDisplayHelper.getDensity(getContext());
+                    Rect rect = new Rect(
+                            (int) (insets.left / density + getExtraInsetLeft(density)),
+                            (int) (insets.top / density + getExtraInsetTop(density)),
+                            (int) (insets.right / density + getExtraInsetRight(density)),
+                            (int) (insets.bottom / density + getExtraInsetBottom(density))
+                    );
+                    setStyleDisplayCutoutSafeArea(rect);
+                }
+            }
+        }, true, false, false);
     }
 
+    @Override
+    public void addJavascriptInterface(Object object, String name) {
 
+    }
+
+    @Deprecated
     public void setCustomOnScrollChangeListener(OnScrollChangeListener onScrollChangeListener) {
-        mOnScrollChangeListener = onScrollChangeListener;
+        addCustomOnScrollChangeListener(onScrollChangeListener);
+    }
+
+    public void addCustomOnScrollChangeListener(OnScrollChangeListener listener) {
+        if (!mOnScrollChangeListeners.contains(listener)) {
+            mOnScrollChangeListeners.add(listener);
+        }
+    }
+
+    public void removeOnScrollChangeListener(OnScrollChangeListener listener) {
+        mOnScrollChangeListeners.remove(listener);
+    }
+
+    public void removeAllOnScrollChangeListener(){
+        mOnScrollChangeListeners.clear();
     }
 
     @Override
     protected void onScrollChanged(int l, int t, int oldl, int oldt) {
         super.onScrollChanged(l, t, oldl, oldt);
-        if (mOnScrollChangeListener != null) {
-            mOnScrollChangeListener.onScrollChange(this, l, t, oldl, oldt);
+        for (OnScrollChangeListener onScrollListener : mOnScrollChangeListeners) {
+            onScrollListener.onScrollChange(this, l, t, oldl, oldt);
         }
     }
 
@@ -134,41 +170,6 @@ public class QMUIWebView extends WebView implements IWindowInsetLayout {
         return sIsReflectionOccurError;
     }
 
-    @Override
-    public boolean applySystemWindowInsets19(Rect insets) {
-        return false;
-    }
-
-    @Override
-    public boolean applySystemWindowInsets21(Object insets) {
-        if (!mNeedDispatchSafeAreaInset) {
-            return false;
-        }
-        float density = QMUIDisplayHelper.getDensity(getContext());
-        int left, top, right, bottom;
-        if (QMUINotchHelper.isNotchOfficialSupport()) {
-            WindowInsets windowInsets = (WindowInsets) insets;
-            left = windowInsets.getSystemWindowInsetLeft();
-            top = windowInsets.getSystemWindowInsetTop();
-            right = windowInsets.getSystemWindowInsetRight();
-            bottom = windowInsets.getSystemWindowInsetBottom();
-        } else {
-            WindowInsetsCompat insetsCompat = (WindowInsetsCompat) insets;
-            left = insetsCompat.getSystemWindowInsetLeft();
-            top = insetsCompat.getSystemWindowInsetTop();
-            right = insetsCompat.getSystemWindowInsetRight();
-            bottom = insetsCompat.getSystemWindowInsetBottom();
-        }
-        Rect rect = new Rect(
-                (int) (left / density + getExtraInsetLeft(density)),
-                (int) (top / density + getExtraInsetTop(density)),
-                (int) (right / density + getExtraInsetRight(density)),
-                (int) (bottom / density + getExtraInsetBottom(density))
-        );
-        setStyleDisplayCutoutSafeArea(rect);
-        return true;
-    }
-
     protected int getExtraInsetTop(float density) {
         return 0;
     }
@@ -195,7 +196,7 @@ public class QMUIWebView extends WebView implements IWindowInsetLayout {
     }
 
     private void setStyleDisplayCutoutSafeArea(@NonNull Rect rect) {
-        if (sIsReflectionOccurError) {
+        if (sIsReflectionOccurError || Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
             return;
         }
 
@@ -306,11 +307,8 @@ public class QMUIWebView extends WebView implements IWindowInsetLayout {
 
     private Method getSetDisplayCutoutSafeAreaMethodInWebContents(Object webContents) {
         try {
-            Method setDisplayCutoutSafeAreaMethod = webContents.getClass()
+           return webContents.getClass()
                     .getDeclaredMethod("setDisplayCutoutSafeArea", Rect.class);
-            if (setDisplayCutoutSafeAreaMethod != null) {
-                return setDisplayCutoutSafeAreaMethod;
-            }
         } catch (NoSuchMethodException ignored) {
 
         }
@@ -333,12 +331,12 @@ public class QMUIWebView extends WebView implements IWindowInsetLayout {
         /**
          * Called when the scroll position of a view changes.
          *
-         * @param v          The view whose scroll position has changed.
+         * @param webView    The view whose scroll position has changed.
          * @param scrollX    Current horizontal scroll origin.
          * @param scrollY    Current vertical scroll origin.
          * @param oldScrollX Previous horizontal scroll origin.
          * @param oldScrollY Previous vertical scroll origin.
          */
-        void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY);
+        void onScrollChange(WebView webView, int scrollX, int scrollY, int oldScrollX, int oldScrollY);
     }
 }

@@ -16,10 +16,13 @@
 
 package com.qmuiteam.qmuidemo.fragment.components;
 
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+
+import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -28,15 +31,23 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.qmuiteam.qmui.arch.annotation.FragmentScheme;
+import com.qmuiteam.qmui.skin.QMUISkinHelper;
+import com.qmuiteam.qmui.skin.QMUISkinValueBuilder;
+import com.qmuiteam.qmui.skin.SkinWriter;
 import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 import com.qmuiteam.qmui.util.QMUIViewHelper;
-import com.qmuiteam.qmui.widget.QMUITabSegment;
+import com.qmuiteam.qmui.widget.tab.QMUITabBuilder;
+import com.qmuiteam.qmui.widget.tab.QMUITabIndicator;
+import com.qmuiteam.qmui.widget.tab.QMUITabSegment;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
+import com.qmuiteam.qmuidemo.QDMainActivity;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.base.BaseFragment;
 import com.qmuiteam.qmuidemo.lib.Group;
 import com.qmuiteam.qmuidemo.lib.annotation.Widget;
 import com.qmuiteam.qmuidemo.manager.QDDataManager;
+import com.qmuiteam.qmuidemo.manager.QDSchemeManager;
 import com.qmuiteam.qmuidemo.model.QDItemDescription;
 
 import java.util.HashMap;
@@ -45,12 +56,13 @@ import java.util.Map;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-/**
- * @author cginechen
- * @date 2017-04-28
- */
-
 @Widget(group = Group.Other, name = "内容自适应，超过父容器则滚动")
+@FragmentScheme(
+        name = "tab",
+        useRefreshIfCurrentMatched = true,
+        activities = {QDMainActivity.class},
+        required = {"mode=2", "name"},
+        keysWithIntValue = {"mode"})
 public class QDTabSegmentScrollableModeFragment extends BaseFragment {
     @SuppressWarnings("FieldCanBeLocal") private final int TAB_COUNT = 10;
 
@@ -78,7 +90,8 @@ public class QDTabSegmentScrollableModeFragment extends BaseFragment {
             ContentPage page = ContentPage.getPage(position);
             View view = getPageView(page);
             view.setTag(page);
-            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             container.addView(view, params);
             return view;
         }
@@ -102,6 +115,23 @@ public class QDTabSegmentScrollableModeFragment extends BaseFragment {
             return POSITION_NONE;
         }
     };
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if(isStartedByScheme()){
+            Toast.makeText(getContext(), "started by scheme", Toast.LENGTH_SHORT).show();
+
+            Bundle args = getArguments();
+            if(args != null){
+                int mode = args.getInt("mode");
+                String name = args.getString("name");
+                Toast.makeText(getContext(), "mode = " + mode + "; name = " + name, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
 
     @Override
     protected View onCreateView() {
@@ -136,11 +166,13 @@ public class QDTabSegmentScrollableModeFragment extends BaseFragment {
     private void initTabAndPager() {
         mContentViewPager.setAdapter(mPagerAdapter);
         mContentViewPager.setCurrentItem(mDestPage.getPosition(), false);
+        QMUITabBuilder tabBuilder = mTabSegment.tabBuilder();
         for (int i = 0; i < mCurrentItemCount; i++) {
-            mTabSegment.addTab(new QMUITabSegment.Tab("Item " + (i + 1)));
+            mTabSegment.addTab(tabBuilder.setText("Item " + (i + 1)).build(getContext()));
         }
         int space = QMUIDisplayHelper.dp2px(getContext(), 16);
-        mTabSegment.setHasIndicator(true);
+        mTabSegment.setIndicator(new QMUITabIndicator(
+                QMUIDisplayHelper.dp2px(getContext(), 2), false, true));
         mTabSegment.setMode(QMUITabSegment.MODE_SCROLLABLE);
         mTabSegment.setItemSpaceInScrollMode(space);
         mTabSegment.setupWithViewPager(mContentViewPager, false);
@@ -170,14 +202,16 @@ public class QDTabSegmentScrollableModeFragment extends BaseFragment {
 
     private void reduceTabCount() {
         if (mCurrentItemCount <= 1) {
-            Toast.makeText(getContext(), "Only the last one, don't reduce it anymore!!!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Only the last one, don't reduce it anymore!!!",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
         mCurrentItemCount--;
         mPagerAdapter.notifyDataSetChanged();
         mTabSegment.reset();
+        QMUITabBuilder tabBuilder = mTabSegment.tabBuilder();
         for (int i = 0; i < mCurrentItemCount; i++) {
-            mTabSegment.addTab(new QMUITabSegment.Tab("Item " + (i + 1)));
+            mTabSegment.addTab(tabBuilder.setText("Item " + (i + 1)).build(getContext()));
         }
         mTabSegment.notifyDataChanged();
     }
@@ -190,6 +224,18 @@ public class QDTabSegmentScrollableModeFragment extends BaseFragment {
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
             textView.setTextColor(ContextCompat.getColor(getContext(), R.color.app_color_description));
             textView.setText("这是第 " + (page.getPosition() + 1) + " 个 Item 的内容区");
+            QMUISkinHelper.setSkinValue(textView, new SkinWriter(){
+                @Override
+                public void write(QMUISkinValueBuilder builder) {
+                    builder.textColor(R.attr.app_skin_common_desc_text_color);
+                }
+            });
+            textView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    QDSchemeManager.getInstance().handle("qmui://tab?mode=2&name=xixi");
+                }
+            });
             view = textView;
             mPageMap.put(page, view);
         }
@@ -243,5 +289,12 @@ public class QDTabSegmentScrollableModeFragment extends BaseFragment {
         public int getPosition() {
             return position;
         }
+    }
+
+    @Override
+    public void refreshFromScheme(@Nullable Bundle bundle) {
+        Toast.makeText(getContext(),
+                "refreshFromScheme: name = " + bundle.getString("name"),
+                Toast.LENGTH_SHORT).show();
     }
 }

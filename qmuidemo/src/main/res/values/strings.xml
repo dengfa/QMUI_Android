@@ -56,6 +56,8 @@
     <string name="tabSegment_mode_muti_color">不同 item，不同文字(icon)颜色</string>
     <string name="tabSegment_mode_change_content_by_index">根据 index 更新 tab 文案</string>
     <string name="tabSegment_mode_replace_tab_by_index">根据 index 完全替换 tab</string>
+    <string name="tabSegment_mode_scale_selected">放大选中态</string>
+    <string name="tabSegment_mode_change_gravity">修改 Gravity</string>
 
     <!-- ProgressBarFragment 进度条展示界面 -->
     <string name="progress_start_button_text">点击开始</string>
@@ -64,6 +66,8 @@
     <string name="circularImageView_item_xml_circle_title">剪裁为圆形+边框+点击效果</string>
     <string name="circularImageView_item_xml_oval_title">剪裁为椭圆形+边框+点击效果</string>
     <string name="circularImageView_item_xml_round_rect_title">剪裁为圆角矩形+边框+点击效果</string>
+    <string name="circularImageView_item_xml_scale_type_desc">下面两张图片，大小固定，第一张图片比 View 小，
+        第二张图片比 View大，可以观察 QMUIRadiusImageView 与 QMUIRadiusImageView2 的不同，便于观察，图片设置了黑色背景，</string>
 
     <string name="circularImageView_modify_tip">可以通过右上角的按钮动态修改下图的效果</string>
     <string name="circularImageView_modify_1">改变边框颜色与宽度</string>
@@ -78,9 +82,13 @@
 
     <!-- PopupFragment 浮层展示界面 -->
     <string name="popup_normal_action_button_text_show">显示普通浮层</string>
-    <string name="popup_normal_action_button_text_hide">隐藏普通浮层</string>
     <string name="popup_list_action_button_text_show">显示列表浮层</string>
-    <string name="popup_list_action_button_text_hide">隐藏列表浮层</string>
+    <string name="popup_dim_amount_action_button_text_show">显示带遮罩的普通浮层</string>
+    <string name="popup_dynamic_update_content">显示浮层，并且动态更新内容</string>
+    <string name="fullscreen_popup_with_close_btn">全屏浮层，带关闭按钮</string>
+    <string name="fullscreen_popup_with_input">全屏浮层，带输入</string>
+    <string name="quick_action">快捷菜单</string>
+    <string name="quick_action_more">快捷菜单(很多item)</string>
 
     <!-- LinkTextView 展示界面 -->
     <string name="linkTextView_auto_identify">URL/Mail/Tel自动识别</string>
@@ -92,9 +100,14 @@
     <string name="spanTouchFix_qmui_fix_behavior">QMUI修复后行为</string>
 
     <!-- PullRefreshView -->
-    <string name="pull_refresh_default_offset_calculator">默认效果: ListView 下拉到一定距离后不动</string>
-    <string name="pull_refresh_follow_offset_calculator">ListView 一直跟随下拉的效果</string>
-    <string name="pull_refresh_center_gravity_offset_calculator">ListView 处于下拉区域的中间的效果</string>
+    <string name="pull_refresh_default_offset_calculator">默认效果: 下拉到一定距离后 Loading 不动</string>
+    <string name="pull_refresh_follow_offset_calculator">Loading 一直跟随下拉</string>
+    <string name="pull_refresh_center_gravity_offset_calculator">Loading 保持在下拉区域的中间</string>
+
+    <!-- StickySectionLayout -->
+    <string name="sticky_section_decoration_list_footer">这是整个列表的 footer</string>
+    <string name="sticky_section_decoration_section_top_tip">这是 section 列表头部的提示语</string>
+    <string name="sticky_section_decoration_section_bottom_tip">这是 section 列表底部的提示语</string>
 
 
     <string name="system_behavior_1">\@qmui:点击span区域会同时出发span的点击事件和 TextView 的点击事件 #qmui#</string>

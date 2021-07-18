@@ -134,7 +134,6 @@ public class WidgetProcessor extends AbstractProcessor {
                     TypeMirror nameMirror = mte.getTypeMirror();
                     if (nameMirror.getKind() == TypeKind.DECLARED) {
                         name = ((DeclaredType) nameMirror).asElement().getSimpleName().toString();
-                        info("nameMirror: kind = " + nameMirror.getKind().name() + " ; name = " + name);
                     }
                 }
                 if (name == null && widget.name().length() > 0) {
@@ -144,12 +143,13 @@ public class WidgetProcessor extends AbstractProcessor {
                 if (name == null || name.length() == 0) {
                     error("please provide widgetClass or name");
                 }
-                constructorBuilder.addStatement("mWidgets.put($T.class, new $T($T.class, $S, $L))",
+                constructorBuilder.addStatement("mWidgets.put($T.class, new $T($T.class, $S, $L, $S))",
                         elementName,
                         mItemDescName,
                         elementName,
                         name,
-                        widget.iconRes());
+                        widget.iconRes(),
+                        widget.docUrl());
             }
 
         }

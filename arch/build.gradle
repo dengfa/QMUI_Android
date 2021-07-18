@@ -1,12 +1,10 @@
 apply plugin: 'com.android.library'
 
-group = 'com.qmuiteam'
-version = "0.2.2"
+version = QMUI_ARCH_VERSION
 
 android {
 
     compileSdkVersion parent.ext.compileSdkVersion
-    buildToolsVersion parent.ext.buildToolsVersion
     lintOptions {
         abortOnError false
     }
@@ -17,23 +15,26 @@ android {
     }
 
     buildTypes {
-        release {
+        /*release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
+        }*/
     }
 
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    compileOnly "com.android.support:design:$supportVersion"
+    api "androidx.appcompat:appcompat:$appcompatVersion"
+    api "androidx.fragment:fragment:1.3.0"
+
+    api project(':arch-annotation')
     compileOnly project(':qmui')
+    testImplementation "junit:junit:$junitVersion"
+    lintChecks project(':lintrule')
 }
 
 // deploy
-File deployConfig = project.file('deploy.properties')
+File deployConfig = rootProject.file('gradle/deploy.properties')
 if (deployConfig.exists()) {
-    apply from: "deployMaven.gradle"
-    apply from: "deployBintray.gradle"
+    apply from: rootProject.file('gradle/deploy.gradle')
 }

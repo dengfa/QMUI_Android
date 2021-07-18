@@ -17,7 +17,10 @@
 package com.qmuiteam.qmuidemo.base;
 
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,16 +34,31 @@ import java.util.List;
  */
 
 public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter<RecyclerViewHolder> {
-    private final List<T> mData;
+    private List<T> mData = new ArrayList<>();
     private final Context mContext;
     private LayoutInflater mInflater;
     private OnItemClickListener mClickListener;
     private OnItemLongClickListener mLongClickListener;
 
-    public BaseRecyclerAdapter(Context ctx, List<T> list) {
-        mData = (list != null) ? list : new ArrayList<T>();
+    public BaseRecyclerAdapter(Context ctx, @Nullable List<T> list) {
+        if(list != null){
+            mData.addAll(list);
+        }
         mContext = ctx;
         mInflater = LayoutInflater.from(ctx);
+    }
+
+    public void setData(@Nullable List<T> list) {
+        mData.clear();
+        if(list != null){
+            mData.addAll(list);
+        }
+        notifyDataSetChanged();
+    }
+
+    public void remove(int pos){
+        mData.remove(pos);
+        notifyItemRemoved(pos);
     }
 
     @Override
@@ -84,6 +102,16 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter<Recycl
     public void add(int pos, T item) {
         mData.add(pos, item);
         notifyItemInserted(pos);
+    }
+
+    public void prepend(@NonNull List<T> items){
+        mData.addAll(0, items);
+        notifyDataSetChanged();
+    }
+
+    public void append(@NonNull List<T> items){
+        mData.addAll(items);
+        notifyDataSetChanged();
     }
 
     public void delete(int pos) {

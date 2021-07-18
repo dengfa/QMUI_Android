@@ -17,11 +17,13 @@
 package com.qmuiteam.qmuidemo.activity;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
+import com.qmuiteam.qmui.arch.annotation.ActivityScheme;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.base.BaseActivity;
@@ -30,8 +32,13 @@ import com.qmuiteam.qmuidemo.fragment.lab.QDArchTestFragment;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+@ActivityScheme(name = "arch",
+        useRefreshIfCurrentMatched = true,
+        required = {"aa", "bb=3"},
+        keysWithBoolValue = {"aa"})
 public class ArchTestActivity extends BaseActivity {
-    @BindView(R.id.topbar) QMUITopBarLayout mTopBar;
+    @BindView(R.id.topbar)
+    QMUITopBarLayout mTopBar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,4 +61,5 @@ public class ArchTestActivity extends BaseActivity {
         mTopBar.setTitle("Arch Test");
         QDArchTestFragment.injectEntrance(mTopBar);
     }
+
 }

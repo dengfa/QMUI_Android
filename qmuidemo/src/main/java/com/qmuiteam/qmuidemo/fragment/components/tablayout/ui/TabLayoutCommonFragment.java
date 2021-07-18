@@ -2,14 +2,14 @@ package com.qmuiteam.qmuidemo.fragment.components.tablayout.ui;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import com.qmuiteam.qmui.tablayout.CommonTabLayout;
@@ -41,7 +41,6 @@ public class TabLayoutCommonFragment extends BaseFragment {
         R.mipmap.tab_home_select, R.mipmap.tab_speech_select, R.mipmap.tab_contact_select, R.mipmap.tab_more_select
     };
     private ArrayList<CustomTabEntity> mTabEntities = new ArrayList<>();
-    private View mDecorView;
     private ViewPager mViewPager;
     private CommonTabLayout mTabLayout_1;
     private CommonTabLayout mTabLayout_2;
@@ -71,25 +70,24 @@ public class TabLayoutCommonFragment extends BaseFragment {
             mTabEntities.add(new TabEntity(mTitles[i], mIconSelectIds[i], mIconUnselectIds[i]));
         }
 
-        mDecorView = getActivity().getWindow().getDecorView();
-        mViewPager = ViewFindUtils.find(mDecorView, R.id.vp_2);
+        mViewPager = ViewFindUtils.find(view, R.id.vp_2);
         mViewPager.setAdapter(new MyPagerAdapter(getChildFragmentManager()));
         /** with nothing */
-        mTabLayout_1 = ViewFindUtils.find(mDecorView, R.id.tl_1);
+        mTabLayout_1 = ViewFindUtils.find(view, R.id.tl_1);
         /** with ViewPager */
-        mTabLayout_2 = ViewFindUtils.find(mDecorView, R.id.tl_2);
+        mTabLayout_2 = ViewFindUtils.find(view, R.id.tl_2);
         /** with Fragments */
-        mTabLayout_3 = ViewFindUtils.find(mDecorView, R.id.tl_3);
+        mTabLayout_3 = ViewFindUtils.find(view, R.id.tl_3);
         /** indicator固定宽度 */
-        mTabLayout_4 = ViewFindUtils.find(mDecorView, R.id.tl_4);
+        mTabLayout_4 = ViewFindUtils.find(view, R.id.tl_4);
         /** indicator固定宽度 */
-        mTabLayout_5 = ViewFindUtils.find(mDecorView, R.id.tl_5);
+        mTabLayout_5 = ViewFindUtils.find(view, R.id.tl_5);
         /** indicator矩形圆角 */
-        mTabLayout_6 = ViewFindUtils.find(mDecorView, R.id.tl_6);
+        mTabLayout_6 = ViewFindUtils.find(view, R.id.tl_6);
         /** indicator三角形 */
-        mTabLayout_7 = ViewFindUtils.find(mDecorView, R.id.tl_7);
+        mTabLayout_7 = ViewFindUtils.find(view, R.id.tl_7);
         /** indicator圆角色块 */
-        mTabLayout_8 = ViewFindUtils.find(mDecorView, R.id.tl_8);
+        mTabLayout_8 = ViewFindUtils.find(view, R.id.tl_8);
 
         mTabLayout_1.setTabData(mTabEntities);
         tl_2();
@@ -208,6 +206,7 @@ public class TabLayoutCommonFragment extends BaseFragment {
             return mTitles[position];
         }
 
+        @NonNull
         @Override
         public Fragment getItem(int position) {
             return mFragments.get(position);
