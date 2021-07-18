@@ -18,17 +18,16 @@ package com.qmuiteam.qmui.widget;
 
 import android.content.Context;
 import android.database.DataSetObserver;
-import android.graphics.Rect;
-import android.os.Build;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.core.view.ViewCompat;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 import com.qmuiteam.qmui.util.QMUIWindowInsetHelper;
 
@@ -37,12 +36,11 @@ import com.qmuiteam.qmui.util.QMUIWindowInsetHelper;
  * @date 2017-09-13
  */
 
-public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
+public class QMUIViewPager extends ViewPager {
     private static final int DEFAULT_INFINITE_RATIO = 100;
 
     private boolean mIsSwipeable = true;
     private boolean mIsInMeasure = false;
-    private QMUIWindowInsetHelper mQMUIWindowInsetHelper;
     private boolean mEnableLoop = false;
     private int mInfiniteRatio = DEFAULT_INFINITE_RATIO;
 
@@ -52,7 +50,7 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
 
     public QMUIViewPager(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mQMUIWindowInsetHelper = new QMUIWindowInsetHelper(this, this);
+        QMUIWindowInsetHelper.overrideWithDoNotHandleWindowInsets(this);
     }
 
     public void setSwipeable(boolean enable) {
@@ -78,25 +76,30 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
                 getAdapter().notifyDataSetChanged();
             }
         }
-
     }
 
     @Override
-    public void addView(View child, int index, ViewGroup.LayoutParams params) {
-        super.addView(child, index, params);
-        ViewCompat.requestApplyInsets(this);
+    public void onViewAdded(View child) {
+        super.onViewAdded(child);
+        ViewCompat.requestApplyInsets(child);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        return mIsSwipeable && super.onTouchEvent(ev);
-
+        try {
+            return mIsSwipeable && super.onTouchEvent(ev);
+        } catch (IllegalArgumentException ignore) {
+            return false;
+        }
     }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return mIsSwipeable && super.onInterceptTouchEvent(ev);
-
+        try {
+            return  mIsSwipeable && super.onInterceptTouchEvent(ev);
+        } catch (IllegalArgumentException ignore) {
+            return false;
+        }
     }
 
     @Override
@@ -108,25 +111,6 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
 
     public boolean isInMeasure() {
         return mIsInMeasure;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    protected boolean fitSystemWindows(Rect insets) {
-        if (Build.VERSION.SDK_INT >= 19 && Build.VERSION.SDK_INT < 21) {
-            return applySystemWindowInsets19(insets);
-        }
-        return super.fitSystemWindows(insets);
-    }
-
-    @Override
-    public boolean applySystemWindowInsets19(Rect insets) {
-        return mQMUIWindowInsetHelper.defaultApplySystemWindowInsets19(this, insets);
-    }
-
-    @Override
-    public boolean applySystemWindowInsets21(Object insets) {
-        return mQMUIWindowInsetHelper.defaultApplySystemWindowInsets21(this, insets);
     }
 
     @Override
@@ -147,21 +131,16 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
 
         @Override
         public int getCount() {
-            int count;
-            if (mEnableLoop) {
-                if (mAdapter.getCount() == 0) {
-                    count = 0;
-                } else {
-                    count = mAdapter.getCount() * mInfiniteRatio;
-                }
-            } else {
-                count = mAdapter.getCount();
+            int count = mAdapter.getCount();
+            if (mEnableLoop && count > 3) {
+                count *= mInfiniteRatio;
             }
             return count;
         }
 
         @Override
-        public Object instantiateItem(ViewGroup container, int position) {
+        @NonNull
+        public Object instantiateItem(@NonNull ViewGroup container, int position) {
             int realPosition = position;
             if (mEnableLoop && mAdapter.getCount() != 0) {
                 realPosition = position % mAdapter.getCount();
@@ -170,7 +149,7 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
         }
 
         @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
+        public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
             int realPosition = position;
             if (mEnableLoop && mAdapter.getCount() != 0) {
                 realPosition = position % mAdapter.getCount();
@@ -179,7 +158,7 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
         }
 
         @Override
-        public boolean isViewFromObject(View view, Object object) {
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
             return mAdapter.isViewFromObject(view, object);
         }
 
@@ -195,12 +174,12 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
         }
 
         @Override
-        public void startUpdate(ViewGroup container) {
+        public void startUpdate(@NonNull ViewGroup container) {
             mAdapter.startUpdate(container);
         }
 
         @Override
-        public void finishUpdate(ViewGroup container) {
+        public void finishUpdate(@NonNull ViewGroup container) {
             mAdapter.finishUpdate(container);
         }
 
@@ -237,7 +216,7 @@ public class QMUIViewPager extends ViewPager implements IWindowInsetLayout {
         }
 
         @Override
-        public int getItemPosition(Object object) {
+        public int getItemPosition(@NonNull Object object) {
             return mAdapter.getItemPosition(object);
         }
     }

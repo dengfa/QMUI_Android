@@ -16,11 +16,12 @@
 
 package com.qmuiteam.qmui.util;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * @author cginechen
@@ -43,6 +44,20 @@ public class QMUILangHelper {
     public static int getNumberDigits(long number) {
         if (number <= 0) return 0;
         return (int) (Math.log10(number) + 1);
+    }
+
+
+    public static String formatNumberToLimitedDigits(int number, int maxDigits) {
+        if (getNumberDigits(number) > maxDigits) {
+            StringBuilder result = new StringBuilder();
+            for (int digit = 1; digit <= maxDigits; digit++) {
+                result.append("9");
+            }
+            result.append("+");
+            return result.toString();
+        } else {
+            return String.valueOf(number);
+        }
     }
 
     /**
@@ -80,8 +95,9 @@ public class QMUILangHelper {
         }
     }
 
+    @Deprecated
     public static boolean objectEquals(Object a, Object b) {
-        return (a == b) || (a != null && a.equals(b));
+        return Objects.equals(a, b);
     }
 
     public static int constrain(int amount, int low, int high) {

@@ -17,12 +17,13 @@
 package com.qmuiteam.qmui.arch;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityOptions;
-import android.os.Build;
 import android.os.Looper;
-import android.support.v4.app.FragmentManager;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.qmuiteam.qmui.QMUILog;
 
@@ -71,42 +72,8 @@ public class Utils {
      * with the {@link android.R.attr#windowIsFloating} attribute.
      */
     public static void convertActivityToTranslucent(Activity activity) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            convertActivityToTranslucentAfterL(activity);
-        } else {
-            convertActivityToTranslucentBeforeL(activity);
-        }
-    }
-
-    /**
-     * Calling the convertToTranslucent method on platforms before Android 5.0
-     */
-    private static void convertActivityToTranslucentBeforeL(Activity activity) {
         try {
-            Class<?>[] classes = Activity.class.getDeclaredClasses();
-            Class<?> translucentConversionListenerClazz = null;
-            for (Class clazz : classes) {
-                if (clazz.getSimpleName().contains("TranslucentConversionListener")) {
-                    translucentConversionListenerClazz = clazz;
-                }
-            }
-            @SuppressLint("PrivateApi") Method method = Activity.class.getDeclaredMethod("convertToTranslucent",
-                    translucentConversionListenerClazz);
-            method.setAccessible(true);
-            method.invoke(activity, new Object[]{
-                    null
-            });
-        } catch (Throwable ignore) {
-        }
-    }
-
-    /**
-     * Calling the convertToTranslucent method on platforms after Android 5.0
-     */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private static void convertActivityToTranslucentAfterL(Activity activity) {
-        try {
-            @SuppressLint("PrivateApi") Method getActivityOptions = Activity.class.getDeclaredMethod("getActivityOptions");
+            @SuppressLint({"PrivateApi", "DiscouragedPrivateApi"}) Method getActivityOptions = Activity.class.getDeclaredMethod("getActivityOptions");
             getActivityOptions.setAccessible(true);
             Object options = getActivityOptions.invoke(activity);
 
@@ -125,6 +92,7 @@ public class Utils {
         }
     }
 
+
     public static void assertInMainThread() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             StackTraceElement[] elements = Thread.currentThread().getStackTrace();
@@ -136,43 +104,175 @@ public class Utils {
         }
     }
 
-    static void findAndModifyOpInBackStackRecord(FragmentManager fragmentManager, int backStackIndex, OpHandler handler){
+    static void modifyOpForStartFragmentAndDestroyCurrent(FragmentManager fragmentManager,
+                                                                 final QMUIFragment fragment,
+                                                                 final boolean useNewTransitionConfigWhenPop,
+                                                                 final QMUIFragment.TransitionConfig transitionConfig){
+        findAndModifyOpInBackStackRecord(fragmentManager, -1, new Utils.OpHandler() {
+            @Override
+            public boolean handle(Object op) {
+                Field cmdField = null;
+                try {
+                    cmdField = Utils.getOpCmdField(op);
+                    cmdField.setAccessible(true);
+                    int cmd = (int) cmdField.get(op);
+                    if (cmd == 1) {
+                        if (useNewTransitionConfigWhenPop) {
+                            Field popEnterAnimField = Utils.getOpPopEnterAnimField(op);
+                            popEnterAnimField.setAccessible(true);
+                            popEnterAnimField.set(op, transitionConfig.popenter);
+
+                            Field popExitAnimField = Utils.getOpPopExitAnimField(op);
+                            popExitAnimField.setAccessible(true);
+                            popExitAnimField.set(op, transitionConfig.popout);
+                        }
+
+                        Field oldFragmentField = Utils.getOpFragmentField(op);
+                        oldFragmentField.setAccessible(true);
+                        Object fragmentObj = oldFragmentField.get(op);
+                        oldFragmentField.set(op, fragment);
+                        Field backStackNestField = Fragment.class.getDeclaredField("mBackStackNesting");
+                        backStackNestField.setAccessible(true);
+                        int oldFragmentBackStackNest = (int) backStackNestField.get(fragmentObj);
+                        backStackNestField.set(fragment, oldFragmentBackStackNest);
+                        backStackNestField.set(fragmentObj, --oldFragmentBackStackNest);
+                        return true;
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+                return false;
+            }
+
+            @Override
+            public boolean needReNameTag() {
+                return true;
+            }
+
+            @Override
+            public String newTagName() {
+                return fragment.getClass().getSimpleName();
+            }
+        });
+    }
+
+    static void findAndModifyOpInBackStackRecord(FragmentManager fragmentManager, int backStackIndex, OpHandler handler) {
         if (fragmentManager == null || handler == null) {
             return;
         }
         int backStackCount = fragmentManager.getBackStackEntryCount();
         if (backStackCount > 0) {
-            if(backStackIndex >= backStackCount || backStackIndex < -backStackCount){
+            if (backStackIndex >= backStackCount || backStackIndex < -backStackCount) {
                 QMUILog.d("findAndModifyOpInBackStackRecord", "backStackIndex error: " +
                         "backStackIndex = " + backStackIndex + " ; backStackCount = " + backStackCount);
                 return;
             }
-            if(backStackIndex < 0){
+            if (backStackIndex < 0) {
                 backStackIndex = backStackCount + backStackIndex;
             }
             try {
                 FragmentManager.BackStackEntry backStackEntry = fragmentManager.getBackStackEntryAt(backStackIndex);
 
-                Field opsField = backStackEntry.getClass().getDeclaredField("mOps");
-                opsField.setAccessible(true);
-                Object opsObj = opsField.get(backStackEntry);
-                if (opsObj instanceof List<?>) {
-                    List<?> ops = (List<?>) opsObj;
-                    for (Object op : ops) {
-                        if(handler.handle(op)){
-                            return;
+                if (handler.needReNameTag()) {
+                    Field nameField = Utils.getNameField(backStackEntry);
+                    if (nameField != null) {
+                        nameField.setAccessible(true);
+                        nameField.set(backStackEntry, handler.newTagName());
+                    }
+                }
+
+
+                Field opsField = Utils.getOpsField(backStackEntry);
+                if(opsField != null){
+                    opsField.setAccessible(true);
+                    Object opsObj = opsField.get(backStackEntry);
+                    if (opsObj instanceof List<?>) {
+                        List<?> ops = (List<?>) opsObj;
+                        for (Object op : ops) {
+                            if (handler.handle(op)) {
+                                return;
+                            }
                         }
                     }
                 }
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    private static boolean sOldBackStackEntryImpl = false;
+
+    static Field getBackStackEntryField(FragmentManager.BackStackEntry backStackEntry, String name) {
+        Field opsField = null;
+        if (!sOldBackStackEntryImpl) {
+            try {
+                opsField = FragmentTransaction.class.getDeclaredField(name);
+            } catch (NoSuchFieldException ignore) {
+            }
+        }
+
+        if (opsField == null) {
+            sOldBackStackEntryImpl = true;
+            try {
+                opsField = backStackEntry.getClass().getDeclaredField(name);
+            } catch (NoSuchFieldException ignore) {
+            }
+        }
+        return opsField;
+    }
+
+    static Field getOpsField(FragmentManager.BackStackEntry backStackEntry) {
+        return getBackStackEntryField(backStackEntry, "mOps");
+    }
+
+    static Field getNameField(FragmentManager.BackStackEntry backStackEntry) {
+        return getBackStackEntryField(backStackEntry, "mName");
+    }
+
+    private static boolean sOldOpImpl = false;
+
+    private static Field getOpField(Object op, String fieldNameNew, String fieldNameOld) {
+        Field field = null;
+        if (!sOldOpImpl) {
+            try {
+                field = op.getClass().getDeclaredField(fieldNameNew);
+            } catch (NoSuchFieldException ignore) {
+
+            }
+        }
+
+        if (field == null) {
+            sOldOpImpl = true;
+            try {
+                field = op.getClass().getDeclaredField(fieldNameOld);
+            } catch (NoSuchFieldException ignore) {
+            }
+        }
+        return field;
+    }
+
+    static Field getOpCmdField(Object op) {
+        return getOpField(op, "mCmd", "cmd");
+    }
+
+    static Field getOpFragmentField(Object op) {
+        return getOpField(op, "mFragment", "fragment");
+    }
+
+    static Field getOpPopEnterAnimField(Object op) {
+        return getOpField(op, "mPopEnterAnim", "popEnterAnim");
+    }
+
+    static Field getOpPopExitAnimField(Object op) {
+        return getOpField(op, "mPopExitAnim", "popExitAnim");
+    }
+
     interface OpHandler {
         boolean handle(Object op);
+
+        boolean needReNameTag();
+
+        String newTagName();
     }
 }

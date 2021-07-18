@@ -16,9 +16,11 @@
 
 package com.qmuiteam.qmui.widget;
 
-import android.support.v4.util.Pools;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.core.util.Pools;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.qmuiteam.qmui.R;
 
@@ -27,9 +29,9 @@ import java.util.List;
 
 /**
  * 一个带 cache 功能的“列表型数据-View”的适配器，适用于自定义 {@link View} 需要显示重复单元 {@link android.widget.ListView} 的情景，
- * cache 功能主要是保证在需要多次刷新数据或布局的情况下（{@link android.widget.ListView} 或 {@link android.support.v7.widget.RecyclerView} 的 itemView）
+ * cache 功能主要是保证在需要多次刷新数据或布局的情况下（{@link android.widget.ListView} 或 {@link RecyclerView} 的 itemView）
  * 复用已存在的 {@link View}。
- * QMUI 用于 {@link QMUITabSegment} 中 {@link QMUITabSegment.Tab} 与数据的适配。
+ * QMUI 用于 {@link com.qmuiteam.qmui.widget.tab.QMUITabSegment} 中 {@link com.qmuiteam.qmui.widget.tab.QMUITab} 与数据的适配。
  *
  * @author cginechen
  * @date 2016-11-27
@@ -58,6 +60,7 @@ public abstract class QMUIItemViewsAdapter<T, V extends View> {
             Object notCacheTag = view.getTag(R.id.qmui_view_can_not_cache_tag);
             if (notCacheTag == null || !(boolean) notCacheTag) {
                 try {
+                    onViewRecycled(view);
                     mCachePool.release(view);
                 } catch (Exception ignored) {
                 }
@@ -83,6 +86,10 @@ public abstract class QMUIItemViewsAdapter<T, V extends View> {
     }
 
     protected abstract V createView(ViewGroup parentView);
+
+    protected void onViewRecycled(V v){
+
+    }
 
     public QMUIItemViewsAdapter<T, V> addItem(T item) {
         mItemData.add(item);

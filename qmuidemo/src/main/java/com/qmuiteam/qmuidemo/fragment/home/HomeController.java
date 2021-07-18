@@ -20,16 +20,16 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Parcelable;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.FrameLayout;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.qmuiteam.qmui.util.QMUIViewHelper;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
-import com.qmuiteam.qmui.widget.QMUIWindowInsetLayout;
 import com.qmuiteam.qmuidemo.QDMainActivity;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.base.BaseFragment;
@@ -42,20 +42,15 @@ import com.qmuiteam.qmuidemo.model.QDItemDescription;
 
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 /**
  * @author cginechen
  * @date 2016-10-20
  */
 
-public abstract class HomeController extends QMUIWindowInsetLayout {
+public abstract class HomeController extends LinearLayout {
 
-    @BindView(R.id.topbar)
-    QMUITopBarLayout mTopBar;
-    @BindView(R.id.recyclerView)
-    RecyclerView mRecyclerView;
+    protected QMUITopBarLayout mTopBar;
+    protected RecyclerView mRecyclerView;
 
     private HomeControlListener mHomeControlListener;
     private ItemAdapter mItemAdapter;
@@ -63,8 +58,14 @@ public abstract class HomeController extends QMUIWindowInsetLayout {
 
     public HomeController(Context context) {
         super(context);
-        LayoutInflater.from(context).inflate(R.layout.home_layout, this);
-        ButterKnife.bind(this);
+        setOrientation(LinearLayout.VERTICAL);
+        mTopBar = new QMUITopBarLayout(context);
+        mTopBar.setId(View.generateViewId());
+        mTopBar.setFitsSystemWindows(true);
+        mRecyclerView = new RecyclerView(context);
+        mRecyclerView.setId(View.generateViewId());
+        addView(mTopBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        addView(mRecyclerView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,0, 1f));
         initTopBar();
         initRecyclerView();
     }
@@ -101,14 +102,14 @@ public abstract class HomeController extends QMUIWindowInsetLayout {
                 QDItemDescription item = mItemAdapter.getItem(pos);
                 try {
                     BaseFragment fragment = item.getDemoClass().newInstance();
-                    if(fragment instanceof QDNotchHelperFragment){
+                    if (fragment instanceof QDNotchHelperFragment) {
                         Context context = getContext();
-                        Intent intent = QDMainActivity.createNotchHelperIntent(context);
+                        Intent intent = QDMainActivity.of(context, QDNotchHelperFragment.class);
                         context.startActivity(intent);
-                        if(context instanceof Activity){
-                            ((Activity)context).overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                        if (context instanceof Activity) {
+                            ((Activity) context).overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                         }
-                    }else{
+                    } else {
                         startFragment(fragment);
                     }
 

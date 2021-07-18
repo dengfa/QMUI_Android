@@ -16,14 +16,13 @@
 
 package com.qmuiteam.qmuidemo.fragment.components.qqface;
 
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.qmuiteam.qmui.widget.QMUITabSegment;
-import com.qmuiteam.qmui.widget.QMUITopBar;
+import com.qmuiteam.qmui.widget.tab.QMUITabSegment;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmuidemo.manager.QDDataManager;
 import com.qmuiteam.qmuidemo.base.BaseFragment;
@@ -45,7 +44,7 @@ import butterknife.ButterKnife;
  * @date 2017-06-08
  */
 
-@Widget(group = Group.Other, name = "性能观测")
+@Widget(group = Group.Other, name = "性能观测[微笑]")
 public class QDQQFacePerformanceTestFragment extends BaseFragment {
     @BindView(R.id.topbar) QMUITopBarLayout mTopBar;
     @BindView(R.id.tabSegment) QMUITabSegment mTabSegment;

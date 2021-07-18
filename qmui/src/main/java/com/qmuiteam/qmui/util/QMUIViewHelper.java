@@ -24,6 +24,7 @@ import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -34,9 +35,12 @@ import android.graphics.RectF;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.widget.ImageViewCompat;
+
 import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,6 +53,9 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.ListView;
+
+import com.qmuiteam.qmui.R;
+import com.qmuiteam.qmui.widget.pullRefreshLayout.QMUIPullRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +72,7 @@ public class QMUIViewHelper {
 
 
     private static final int[] APPCOMPAT_CHECK_ATTRS = {
-            android.support.v7.appcompat.R.attr.colorPrimary
+            androidx.appcompat.R.attr.colorPrimary
     };
 
     public static void checkAppCompatTheme(Context context) {
@@ -124,7 +131,7 @@ public class QMUIViewHelper {
 
     @SuppressWarnings("deprecation")
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    public static void setBackground(View view, Drawable drawable){
+    public static void setBackground(View view, Drawable drawable) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             view.setBackground(drawable);
         } else {
@@ -134,7 +141,7 @@ public class QMUIViewHelper {
 
     public static void setBackgroundKeepingPadding(View view, Drawable drawable) {
         int[] padding = new int[]{view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(), view.getPaddingBottom()};
-        setBackground(view, drawable);
+        view.setBackground(drawable);
         view.setPadding(padding[0], padding[1], padding[2], padding[3]);
     }
 
@@ -372,8 +379,8 @@ public class QMUIViewHelper {
     public static void clearValueAnimator(Animator animator) {
         if (animator != null) {
             animator.removeAllListeners();
-            if(animator instanceof ValueAnimator){
-                ((ValueAnimator)animator).removeAllUpdateListeners();
+            if (animator instanceof ValueAnimator) {
+                ((ValueAnimator) animator).removeAllUpdateListeners();
             }
 
             if (Build.VERSION.SDK_INT >= 19) {
@@ -540,7 +547,7 @@ public class QMUIViewHelper {
      * @param value 设置的值
      */
     public static void setPaddingLeft(View view, int value) {
-        if(value != view.getPaddingLeft()){
+        if (value != view.getPaddingLeft()) {
             view.setPadding(value, view.getPaddingTop(), view.getPaddingRight(), view.getPaddingBottom());
         }
     }
@@ -552,7 +559,7 @@ public class QMUIViewHelper {
      * @param value 设置的值
      */
     public static void setPaddingTop(View view, int value) {
-        if(value != view.getPaddingTop()){
+        if (value != view.getPaddingTop()) {
             view.setPadding(view.getPaddingLeft(), value, view.getPaddingRight(), view.getPaddingBottom());
         }
     }
@@ -564,7 +571,7 @@ public class QMUIViewHelper {
      * @param value 设置的值
      */
     public static void setPaddingRight(View view, int value) {
-        if(value != view.getPaddingRight()){
+        if (value != view.getPaddingRight()) {
             view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), value, view.getPaddingBottom());
         }
     }
@@ -576,22 +583,62 @@ public class QMUIViewHelper {
      * @param value 设置的值
      */
     public static void setPaddingBottom(View view, int value) {
-        if(value != view.getPaddingBottom()){
+        if (value != view.getPaddingBottom()) {
             view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(), value);
         }
     }
 
+    public static void updateChildrenOffsetHelperOnLayout(@NonNull ViewGroup viewGroup){
+        View view;
+        QMUIViewOffsetHelper offsetHelper;
+        for(int i = 0; i < viewGroup.getChildCount(); i++){
+            view = viewGroup.getChildAt(i);
+            offsetHelper = getOffsetHelper(view);
+            if(offsetHelper != null){
+                offsetHelper.onViewLayout();
+            }
+        }
+    }
+
+    @Nullable
+    public static QMUIViewOffsetHelper getOffsetHelper(@NonNull View view){
+        Object tag = view.getTag(R.id.qmui_view_offset_helper);
+        if(tag instanceof QMUIViewOffsetHelper){
+            return (QMUIViewOffsetHelper) tag;
+        }
+        return null;
+    }
+
+    @NonNull
+    public static QMUIViewOffsetHelper getOrCreateOffsetHelper(@NonNull View view){
+        Object tag = view.getTag(R.id.qmui_view_offset_helper);
+        if(tag instanceof QMUIViewOffsetHelper){
+            return (QMUIViewOffsetHelper) tag;
+        }else{
+            QMUIViewOffsetHelper ret = new QMUIViewOffsetHelper(view);
+            view.setTag(R.id.qmui_view_offset_helper, ret);
+            return ret;
+        }
+    }
+
     /**
-     * 判断是否需要对 LineSpacingExtra 进行额外的兼容处理
-     * 安卓 5.0 以下版本中，LineSpacingExtra 在最后一行也会产生作用，因此会多出一个 LineSpacingExtra 的空白，可以通过该方法判断后进行兼容处理
-     * if (QMUIViewHelper.getISLastLineSpacingExtraError()) {
-     * textView.bottomMargin = -3dp;
-     * } else {
-     * textView.bottomMargin = 0;
-     * }
+     * requestDisallowInterceptTouchEvent 的安全方法。存在它的原因是 QMUIPullRefreshLayout 会拦截这个事件
+     *
+     * @param view
+     * @param value
      */
-    public static boolean getIsLastLineSpacingExtraError() {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
+    public static void safeRequestDisallowInterceptTouchEvent(@NonNull View view, boolean value) {
+        ViewParent viewParent = view.getParent();
+        if (viewParent != null) {
+            ViewParent layout = viewParent;
+            while (layout != null) {
+                if (layout instanceof QMUIPullRefreshLayout) {
+                    ((QMUIPullRefreshLayout) layout).openSafeDisallowInterceptTouchEvent();
+                }
+                layout = layout.getParent();
+            }
+            viewParent.requestDisallowInterceptTouchEvent(value);
+        }
     }
 
     /**
@@ -644,25 +691,29 @@ public class QMUIViewHelper {
         return view;
     }
 
-    public static void safeSetImageViewSelected(ImageView imageView, boolean selected){
+    public static void safeSetImageViewSelected(ImageView imageView, boolean selected) {
         // imageView setSelected 实现有问题。
         // resizeFromDrawable 中判断 drawable size 是否改变而调用 requestLayout，看似合理，但不会被调用
         // 因为 super.setSelected(selected) 会调用 refreshDrawableState
         // 而从 android 6 以后， ImageView 会重载refreshDrawableState，并在里面处理了 drawable size 改变的问题,
         // 从而导致 resizeFromDrawable 的判断失效
         Drawable drawable = imageView.getDrawable();
-        if(drawable == null){
+        if (drawable == null) {
             return;
         }
         int drawableWidth = drawable.getIntrinsicWidth();
         int drawableHeight = drawable.getIntrinsicHeight();
         imageView.setSelected(selected);
-        if(drawable.getIntrinsicWidth() != drawableWidth || drawable.getIntrinsicHeight() != drawableHeight){
+        if (drawable.getIntrinsicWidth() != drawableWidth || drawable.getIntrinsicHeight() != drawableHeight) {
             imageView.requestLayout();
         }
     }
 
 
+    /**
+     * please use ImageViewCompat.setImageTintList() replace this.
+     */
+    @Deprecated
     public static ColorFilter setImageViewTintColor(ImageView imageView, @ColorInt int tintColor) {
         LightingColorFilter colorFilter = new LightingColorFilter(Color.argb(255, 0, 0, 0), tintColor);
         imageView.setColorFilter(colorFilter);

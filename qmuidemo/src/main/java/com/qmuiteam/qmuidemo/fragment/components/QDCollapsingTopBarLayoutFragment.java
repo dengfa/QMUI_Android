@@ -17,19 +17,20 @@
 package com.qmuiteam.qmuidemo.fragment.components;
 
 import android.animation.ValueAnimator;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.qmuiteam.qmui.widget.QMUICollapsingTopBarLayout;
 import com.qmuiteam.qmui.widget.QMUITopBar;
-import com.qmuiteam.qmuidemo.manager.QDDataManager;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.adaptor.QDRecyclerViewAdapter;
 import com.qmuiteam.qmuidemo.base.BaseFragment;
 import com.qmuiteam.qmuidemo.lib.annotation.Widget;
+import com.qmuiteam.qmuidemo.manager.QDDataManager;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -69,12 +70,14 @@ public class QDCollapsingTopBarLayoutFragment extends BaseFragment {
             }
         });
 
-        return rootView;
-    }
+        mCollapsingTopBarLayout.addOnOffsetUpdateListener(new QMUICollapsingTopBarLayout.OnOffsetUpdateListener() {
+            @Override
+            public void onOffsetChanged(QMUICollapsingTopBarLayout layout, int offset, float expandFraction) {
+                Log.i(TAG, "offset = " + offset + "; expandFraction = " + expandFraction);
+            }
+        });
 
-    @Override
-    protected boolean translucentFull() {
-        return true;
+        return rootView;
     }
 
     private void initTopBar() {

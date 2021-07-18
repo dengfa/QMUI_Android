@@ -17,11 +17,7 @@
 package com.qmuiteam.qmuidemo.fragment.util;
 
 import android.app.Activity;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,10 +25,18 @@ import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 import com.qmuiteam.qmui.util.QMUIViewHelper;
-import com.qmuiteam.qmui.widget.QMUITabSegment;
+import com.qmuiteam.qmui.util.QMUIWindowInsetHelper;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
+import com.qmuiteam.qmui.widget.tab.QMUITab;
+import com.qmuiteam.qmui.widget.tab.QMUITabBuilder;
+import com.qmuiteam.qmui.widget.tab.QMUITabSegment;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.base.BaseFragment;
 import com.qmuiteam.qmuidemo.lib.Group;
@@ -80,6 +84,11 @@ public class QDNotchHelperFragment extends BaseFragment {
         ButterKnife.bind(this, layout);
         initTopBar();
         initTabs();
+        QMUIWindowInsetHelper.handleWindowInsets(mTabContainer,
+                WindowInsetsCompat.Type.navigationBars() | WindowInsetsCompat.Type.displayCutout(),
+                true,
+                true
+        );
         mNoSafeBgLayout.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
@@ -107,22 +116,27 @@ public class QDNotchHelperFragment extends BaseFragment {
     }
 
     private void initTabs() {
-        QMUITabSegment.Tab component = new QMUITabSegment.Tab(
-                ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_component),
-                ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_component_selected),
-                "Components", false
-        );
+        QMUITabBuilder builder = mTabSegment.tabBuilder();
+        builder.setColorAttr(R.attr.qmui_config_color_gray_6, R.attr.qmui_config_color_blue)
+                .setSelectedIconScale(2f)
+                .setTextSize(QMUIDisplayHelper.sp2px(getContext(), 14), QMUIDisplayHelper.sp2px(getContext(), 16))
+                .setDynamicChangeIconColor(false);
+        QMUITab component = builder
+                .setNormalDrawable(ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_component))
+                .setSelectedDrawable(ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_component_selected))
+                .setText("Components")
+                .build(getContext());
+        QMUITab util = builder
+                .setNormalDrawable(ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_util))
+                .setSelectedDrawable(ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_util_selected))
+                .setText("Helper")
+                .build(getContext());
+        QMUITab lab = builder
+                .setNormalDrawable(ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_lab))
+                .setSelectedDrawable(ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_lab_selected))
+                .setText("Lab")
+                .build(getContext());
 
-        QMUITabSegment.Tab util = new QMUITabSegment.Tab(
-                ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_util),
-                ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_util_selected),
-                "Helper", false
-        );
-        QMUITabSegment.Tab lab = new QMUITabSegment.Tab(
-                ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_lab),
-                ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_lab_selected),
-                "Lab", false
-        );
         mTabSegment.addTab(component)
                 .addTab(util)
                 .addTab(lab);
@@ -145,15 +159,10 @@ public class QDNotchHelperFragment extends BaseFragment {
             }
             View decorView = window.getDecorView();
             int systemUi = decorView.getSystemUiVisibility();
-            systemUi |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                systemUi |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                systemUi |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-            }
+            systemUi |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
             decorView.setSystemUiVisibility(systemUi);
             QMUIDisplayHelper.setFullScreen(getActivity());
             QMUIViewHelper.fadeOut(mTopBar, 300, null, true);
@@ -171,14 +180,9 @@ public class QDNotchHelperFragment extends BaseFragment {
             }
             final View decorView = window.getDecorView();
             int systemUi = decorView.getSystemUiVisibility();
-            systemUi &= ~View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                systemUi &= ~View.SYSTEM_UI_FLAG_FULLSCREEN;
-                systemUi |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                systemUi &= ~View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-            }
+            systemUi &= ~(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+            systemUi |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+
             decorView.setSystemUiVisibility(systemUi);
             QMUIDisplayHelper.cancelFullScreen(getActivity());
             QMUIViewHelper.fadeIn(mTopBar, 300, null, true);

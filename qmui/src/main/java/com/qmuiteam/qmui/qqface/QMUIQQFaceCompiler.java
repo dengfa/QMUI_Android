@@ -20,11 +20,18 @@ import android.graphics.drawable.Drawable;
 import android.text.Spannable;
 import android.util.LruCache;
 
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+
 import com.qmuiteam.qmui.span.QMUITouchableSpan;
 import com.qmuiteam.qmui.util.QMUILangHelper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * {@link QMUIQQFaceView} 的内容解析器，将文本内容解析成 {@link QMUIQQFaceView} 想要的数据格式。
@@ -35,24 +42,31 @@ import java.util.List;
 
 public class QMUIQQFaceCompiler {
     private static final int SPAN_COLUMN = 2;
+    private static final Map<IQMUIQQFaceManager, QMUIQQFaceCompiler> sInstanceMap = new HashMap<>(4);
+    private static IQMUIQQFaceManager sDefaultQQFaceManager = new QMUINoQQFaceManager();
 
-    private volatile static QMUIQQFaceCompiler sInstance;
+    public static void setDefaultQQFaceManager(@NonNull IQMUIQQFaceManager defaultQQFaceManager) {
+        sDefaultQQFaceManager = defaultQQFaceManager;
+    }
 
-    // cache
     private LruCache<CharSequence, ElementList> mCache;
-
     private IQMUIQQFaceManager mQQFaceManager;
 
-    // 有多线程保护，如果内容非常多，可以扔到后台去（虽然暂时没有这个必要，但不避免有人想这么做）
+
+    @MainThread
+    public static QMUIQQFaceCompiler getDefaultInstance(){
+        return getInstance(sDefaultQQFaceManager);
+    }
+
+    @MainThread
     public static QMUIQQFaceCompiler getInstance(IQMUIQQFaceManager manager) {
-        if (sInstance == null) {
-            synchronized (QMUIQQFaceCompiler.class) {
-                if (sInstance == null) {
-                    sInstance = new QMUIQQFaceCompiler(manager);
-                }
-            }
+        QMUIQQFaceCompiler instance = sInstanceMap.get(manager);
+        if (instance != null) {
+            return instance;
         }
-        return sInstance;
+        instance = new QMUIQQFaceCompiler(manager);
+        sInstanceMap.put(manager, instance);
+        return instance;
     }
 
     private QMUIQQFaceCompiler(IQMUIQQFaceManager manager) {
@@ -60,7 +74,7 @@ public class QMUIQQFaceCompiler {
         mQQFaceManager = manager;
     }
 
-    public int getSpecialBoundsMaxHeight(){
+    public int getSpecialBoundsMaxHeight() {
         return mQQFaceManager.getSpecialDrawableMaxHeight();
     }
 
@@ -95,16 +109,30 @@ public class QMUIQQFaceCompiler {
         QMUITouchableSpan[] spans = null;
         int[] spanInfo = null;
         if (!inSpan && (text instanceof Spannable)) {
+            final Spannable spannable = (Spannable) text;
             spans = ((Spannable) text).getSpans(
                     0,
                     text.length() - 1,
                     QMUITouchableSpan.class);
+            Arrays.sort(spans, new Comparator<QMUITouchableSpan>() {
+                @Override
+                public int compare(QMUITouchableSpan o1, QMUITouchableSpan o2) {
+                    int start1 = spannable.getSpanStart(o1);
+                    int start2 = spannable.getSpanStart(o2);
+                    if (start1 > start2) {
+                        return 1;
+                    } else if (start1 == start2) {
+                        return 0;
+                    }
+                    return -1;
+                }
+            });
             hasClickableSpans = spans.length > 0;
             if (hasClickableSpans) {
                 spanInfo = new int[spans.length * SPAN_COLUMN];
                 for (int i = 0; i < spans.length; i++) {
-                    spanInfo[i * SPAN_COLUMN] = ((Spannable) text).getSpanStart(spans[i]);
-                    spanInfo[i * SPAN_COLUMN + 1] = ((Spannable) text).getSpanEnd(spans[i]);
+                    spanInfo[i * SPAN_COLUMN] = spannable.getSpanStart(spans[i]);
+                    spanInfo[i * SPAN_COLUMN + 1] = spannable.getSpanEnd(spans[i]);
                 }
             }
         }
@@ -114,7 +142,9 @@ public class QMUIQQFaceCompiler {
             return elementList;
         }
         elementList = realCompile(text, start, end, spans, spanInfo);
-        mCache.put(text, elementList);
+        if(!hasClickableSpans && !inSpan){
+            mCache.put(text, elementList);
+        }
         return elementList;
     }
 
@@ -363,8 +393,11 @@ public class QMUIQQFaceCompiler {
             } else if (element.getType() == ElementType.NEXTLINE) {
                 mNewLineCount++;
             } else if (element.getType() == ElementType.SPAN) {
-                mQQFaceCount += element.getChildList().getQQFaceCount();
-                mNewLineCount += element.getChildList().getNewLineCount();
+                ElementList childList = element.getChildList();
+                if (childList != null) {
+                    mQQFaceCount += element.getChildList().getQQFaceCount();
+                    mNewLineCount += element.getChildList().getNewLineCount();
+                }
             }
             mElements.add(element);
         }

@@ -34,18 +34,26 @@ import com.qmuiteam.qmuidemo.fragment.components.QDPriorityLinearLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDProgressBarFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDPullRefreshFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDRadiusImageViewFragment;
+import com.qmuiteam.qmuidemo.fragment.components.QDRecyclerViewDraggableScrollBarFragment;
+import com.qmuiteam.qmuidemo.fragment.components.swipeAction.QDRVSwipeActionFragment;
+import com.qmuiteam.qmuidemo.fragment.components.swipeAction.QDRVSwipeMutiActionFragment;
+import com.qmuiteam.qmuidemo.fragment.components.QDSliderFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDSpanTouchFixTextViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDTabSegmentFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDTipDialogFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDVerticalTextViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.horizontalpage.PagerRecyclerViewFragment;
+import com.qmuiteam.qmuidemo.fragment.components.pullLayout.QDPullFragment;
 import com.qmuiteam.qmuidemo.fragment.components.qqface.QDQQFaceFragment;
 import com.qmuiteam.qmuidemo.fragment.components.tablayout.ui.TabLayoutFragment;
+import com.qmuiteam.qmuidemo.fragment.components.section.QDSectionLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.viewpager.QDViewPagerFragment;
 import com.qmuiteam.qmuidemo.fragment.lab.QDAnimationListViewFragment;
 import com.qmuiteam.qmuidemo.fragment.lab.QDArchTestFragment;
+import com.qmuiteam.qmuidemo.fragment.lab.QDContinuousNestedScrollFragment;
+import com.qmuiteam.qmuidemo.fragment.lab.QDSchemeFragment;
 import com.qmuiteam.qmuidemo.fragment.lab.QDSnapHelperFragment;
-import com.qmuiteam.qmuidemo.fragment.lab.QDWebViewFixFragment;
+import com.qmuiteam.qmuidemo.fragment.lab.QDWebViewFragment;
 import com.qmuiteam.qmuidemo.fragment.util.QDColorHelperFragment;
 import com.qmuiteam.qmuidemo.fragment.util.QDDeviceHelperFragment;
 import com.qmuiteam.qmuidemo.fragment.util.QDDrawableHelperFragment;
@@ -112,6 +120,12 @@ public class QDDataManager {
         mComponentsNames.add(QDViewPagerFragment.class);
         mComponentsNames.add(QDLayoutFragment.class);
         mComponentsNames.add(QDPriorityLinearLayoutFragment.class);
+        mComponentsNames.add(QDSectionLayoutFragment.class);
+        mComponentsNames.add(QDContinuousNestedScrollFragment.class);
+        mComponentsNames.add(QDSliderFragment.class);
+        mComponentsNames.add(QDPullFragment.class);
+        mComponentsNames.add(QDRecyclerViewDraggableScrollBarFragment.class);
+        mComponentsNames.add(QDRVSwipeActionFragment.class);
         mComponentsNames.add(QD3DRotationFragment.class);
         mComponentsNames.add(QDEndlessRecyclerViewFragment.class);
         mComponentsNames.add(PagerRecyclerViewFragment.class);
@@ -140,7 +154,8 @@ public class QDDataManager {
         mLabNames.add(QDAnimationListViewFragment.class);
         mLabNames.add(QDSnapHelperFragment.class);
         mLabNames.add(QDArchTestFragment.class);
-        mLabNames.add(QDWebViewFixFragment.class);
+        mLabNames.add(QDWebViewFragment.class);
+        mLabNames.add(QDSchemeFragment.class);
     }
 
     public QDItemDescription getDescription(Class<? extends BaseFragment> cls) {
@@ -153,6 +168,14 @@ public class QDDataManager {
             return null;
         }
         return itemDescription.getName();
+    }
+
+    public String getDocUrl(Class<? extends BaseFragment> cls) {
+        QDItemDescription itemDescription = getDescription(cls);
+        if (itemDescription == null) {
+            return null;
+        }
+        return itemDescription.getDocUrl();
     }
 
     public List<QDItemDescription> getComponentsDescriptions() {

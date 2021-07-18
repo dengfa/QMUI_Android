@@ -19,8 +19,9 @@ package com.qmuiteam.qmui.span;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.support.annotation.NonNull;
 import android.text.style.ReplacementSpan;
+
+import androidx.annotation.NonNull;
 
 /**
  * 支持调整字体大小的 span。{@link android.text.style.AbsoluteSizeSpan} 可以调整字体大小，但在中英文混排下由于 decent 的不同，
@@ -44,13 +45,13 @@ public class QMUITextSizeSpan extends ReplacementSpan {
         mTextSize = textSize;
         mVerticalOffset = verticalOffset;
         mTypeface = typeface;
+        mPaint = new Paint();
+        mPaint.setTextSize(mTextSize);
+        mPaint.setTypeface(mTypeface);
     }
 
     @Override
     public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, Paint.FontMetricsInt fm) {
-        mPaint = new Paint(paint);
-        mPaint.setTextSize(mTextSize);
-        mPaint.setTypeface(mTypeface);
         if(mTextSize > paint.getTextSize() && fm != null){
             Paint.FontMetricsInt newFm = mPaint.getFontMetricsInt();
             fm.descent = newFm.descent;
@@ -64,6 +65,9 @@ public class QMUITextSizeSpan extends ReplacementSpan {
     @Override
     public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top,
                      int y, int bottom, @NonNull Paint paint) {
+        mPaint.setColor(paint.getColor());
+        mPaint.setStyle(paint.getStyle());
+        mPaint.setAntiAlias(paint.isAntiAlias());
         int baseline = y + mVerticalOffset;
         canvas.drawText(text, start, end, x, baseline, mPaint);
     }

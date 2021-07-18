@@ -16,8 +16,6 @@
 
 package com.qmuiteam.qmui.widget;
 
-import android.animation.Animator;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -28,8 +26,10 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.qmuiteam.qmui.util.QMUIDisplayHelper;
+import androidx.core.view.ViewCompat;
+
 import com.qmuiteam.qmui.R;
+import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 
 /**
  * 一个进度条控件，通过颜色变化显示进度，支持环形和矩形两种形式，主要特性如下：
@@ -44,13 +44,17 @@ import com.qmuiteam.qmui.R;
  */
 public class QMUIProgressBar extends View {
 
-    public static int TYPE_RECT = 0;
-    public static int TYPE_CIRCLE = 1;
-    public static int TOTAL_DURATION = 1000;
-    public static int DEFAULT_PROGRESS_COLOR = Color.BLUE;
-    public static int DEFAULT_BACKGROUND_COLOR = Color.GRAY;
-    public static int DEFAULT_TEXT_SIZE = 20;
-    public static int DEFAULT_TEXT_COLOR = Color.BLACK;
+    public final static int TYPE_RECT = 0;
+    public final static int TYPE_ROUND_RECT = 1;
+    public final static int TYPE_CIRCLE = 2;
+    public final static int TYPE_FILL_CIRCLE = 3;
+
+    public final static int TOTAL_DURATION = 1000;
+    public final static int DEFAULT_PROGRESS_COLOR = Color.BLUE;
+    public final static int DEFAULT_BACKGROUND_COLOR = Color.GRAY;
+    public final static int DEFAULT_TEXT_SIZE = 20;
+    public final static int DEFAULT_TEXT_COLOR = Color.BLACK;
+    private final static int PENDING_VALUE_NOT_SET = -1;
     /*circle_progress member*/
     public static int DEFAULT_STROKE_WIDTH = QMUIDisplayHelper.dpToPx(40);
     QMUIProgressBarTextGenerator mQMUIProgressBarTextGenerator;
@@ -63,18 +67,32 @@ public class QMUIProgressBar extends View {
     private int mType;
     private int mProgressColor;
     private int mBackgroundColor;
-    private boolean isAnimating = false;
     private int mMaxValue;
     private int mValue;
-    private ValueAnimator mAnimator;
+    private int mPendingValue;
+    private long mAnimationStartTime;
+    private int mAnimationDistance;
+    private int mAnimationDuration;
+    private int mTextSize;
+    private int mTextColor;
+    private boolean mRoundCap;
     private Paint mBackgroundPaint = new Paint();
     private Paint mPaint = new Paint();
     private Paint mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private RectF mArcOval = new RectF();
     private String mText = "";
     private int mStrokeWidth;
-    private int mCircleRadius;
+    private float mCircleRadius;
     private Point mCenterPoint;
+    private OnProgressChangeListener mOnProgressChangeListener;
+    private Runnable mNotifyProgressChangeAction = new Runnable() {
+        @Override
+        public void run() {
+            if(mOnProgressChangeListener != null){
+                mOnProgressChangeListener.onProgressChange(QMUIProgressBar.this, mValue, mMaxValue);
+            }
+        }
+    };
 
 
     public QMUIProgressBar(Context context) {
@@ -101,56 +119,108 @@ public class QMUIProgressBar extends View {
         mMaxValue = array.getInt(R.styleable.QMUIProgressBar_qmui_max_value, 100);
         mValue = array.getInt(R.styleable.QMUIProgressBar_qmui_value, 0);
 
-        boolean isRoundCap = array.getBoolean(R.styleable.QMUIProgressBar_qmui_stroke_round_cap, false);
+        mRoundCap = array.getBoolean(R.styleable.QMUIProgressBar_qmui_stroke_round_cap, false);
 
-        int textSize = DEFAULT_TEXT_SIZE;
+        mTextSize = DEFAULT_TEXT_SIZE;
         if (array.hasValue(R.styleable.QMUIProgressBar_android_textSize)) {
-            textSize = array.getDimensionPixelSize(R.styleable.QMUIProgressBar_android_textSize, DEFAULT_TEXT_SIZE);
+            mTextSize = array.getDimensionPixelSize(R.styleable.QMUIProgressBar_android_textSize, DEFAULT_TEXT_SIZE);
         }
-        int textColor = DEFAULT_TEXT_COLOR;
+        mTextColor = DEFAULT_TEXT_COLOR;
         if (array.hasValue(R.styleable.QMUIProgressBar_android_textColor)) {
-            textColor = array.getColor(R.styleable.QMUIProgressBar_android_textColor, DEFAULT_TEXT_COLOR);
+            mTextColor = array.getColor(R.styleable.QMUIProgressBar_android_textColor, DEFAULT_TEXT_COLOR);
         }
 
-        if (mType == TYPE_CIRCLE) {
+        if (mType == TYPE_CIRCLE || mType == TYPE_FILL_CIRCLE) {
             mStrokeWidth = array.getDimensionPixelSize(R.styleable.QMUIProgressBar_qmui_stroke_width, DEFAULT_STROKE_WIDTH);
         }
         array.recycle();
-        configPaint(textColor, textSize, isRoundCap);
+        configPaint(mTextColor, mTextSize, mRoundCap, mStrokeWidth);
 
         setProgress(mValue);
     }
 
+    public void setOnProgressChangeListener(OnProgressChangeListener onProgressChangeListener) {
+        mOnProgressChangeListener = onProgressChangeListener;
+    }
+
+    public void setStrokeWidth(int strokeWidth) {
+        if(mStrokeWidth != strokeWidth){
+            mStrokeWidth = strokeWidth;
+            if(mWidth > 0){
+                configShape();
+            }
+            configPaint(mTextColor, mTextSize, mRoundCap, mStrokeWidth);
+            invalidate();
+        }
+    }
+
     private void configShape() {
-        if (mType == TYPE_RECT) {
+        if (mType == TYPE_RECT || mType == TYPE_ROUND_RECT) {
             mBgRect = new RectF(getPaddingLeft(), getPaddingTop(), mWidth + getPaddingLeft(), mHeight + getPaddingTop());
             mProgressRect = new RectF();
         } else {
-            mCircleRadius = (Math.min(mWidth, mHeight) - mStrokeWidth) / 2;
+            mCircleRadius = (Math.min(mWidth, mHeight) - mStrokeWidth) / 2f - 0.5f;
             mCenterPoint = new Point(mWidth / 2, mHeight / 2);
         }
     }
 
-    private void configPaint(int textColor, int textSize, boolean isRoundCap) {
+    private void configPaint(int textColor, int textSize, boolean isRoundCap, int strokeWidth) {
         mPaint.setColor(mProgressColor);
         mBackgroundPaint.setColor(mBackgroundColor);
-        if (mType == TYPE_RECT) {
+        if (mType == TYPE_RECT || mType == TYPE_ROUND_RECT) {
             mPaint.setStyle(Paint.Style.FILL);
+            mPaint.setStrokeCap(Paint.Cap.BUTT);
             mBackgroundPaint.setStyle(Paint.Style.FILL);
+        } else if(mType == TYPE_FILL_CIRCLE){
+            mPaint.setStyle(Paint.Style.FILL);
+            mPaint.setAntiAlias(true);
+            mPaint.setStrokeCap(Paint.Cap.BUTT);
+            mBackgroundPaint.setStyle(Paint.Style.STROKE);
+            mBackgroundPaint.setStrokeWidth(strokeWidth);
+            mBackgroundPaint.setAntiAlias(true);
         } else {
             mPaint.setStyle(Paint.Style.STROKE);
-            mPaint.setStrokeWidth(mStrokeWidth);
+            mPaint.setStrokeWidth(strokeWidth);
             mPaint.setAntiAlias(true);
             if (isRoundCap) {
                 mPaint.setStrokeCap(Paint.Cap.ROUND);
+            }else{
+                mPaint.setStrokeCap(Paint.Cap.BUTT);
             }
             mBackgroundPaint.setStyle(Paint.Style.STROKE);
-            mBackgroundPaint.setStrokeWidth(mStrokeWidth);
+            mBackgroundPaint.setStrokeWidth(strokeWidth);
             mBackgroundPaint.setAntiAlias(true);
         }
         mTextPaint.setColor(textColor);
         mTextPaint.setTextSize(textSize);
         mTextPaint.setTextAlign(Paint.Align.CENTER);
+    }
+
+    public void setType(int type) {
+        mType = type;
+        configPaint(mTextColor, mTextSize, mRoundCap, mStrokeWidth);
+        invalidate();
+    }
+
+    public void setBarColor(int backgroundColor, int progressColor) {
+        mBackgroundColor = backgroundColor;
+        mProgressColor = progressColor;
+        mBackgroundPaint.setColor(mBackgroundColor);
+        mPaint.setColor(mProgressColor);
+        invalidate();
+    }
+
+    @Override
+    public void setBackgroundColor(int backgroundColor) {
+        mBackgroundColor = backgroundColor;
+        mBackgroundPaint.setColor(mBackgroundColor);
+        invalidate();
+    }
+
+    public void setProgressColor(int progressColor) {
+        mProgressColor = progressColor;
+        mPaint.setColor(mProgressColor);
+        invalidate();
     }
 
     /**
@@ -196,13 +266,33 @@ public class QMUIProgressBar extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if (mPendingValue != PENDING_VALUE_NOT_SET) {
+            long elapsed = System.currentTimeMillis() - mAnimationStartTime;
+            if (elapsed >= mAnimationDuration) {
+                mValue = mPendingValue;
+                post(mNotifyProgressChangeAction);
+                mPendingValue = PENDING_VALUE_NOT_SET;
+            } else {
+                mValue = (int) (mPendingValue - (1f - ((float) elapsed / mAnimationDuration)) * mAnimationDistance);
+                post(mNotifyProgressChangeAction);
+                ViewCompat.postInvalidateOnAnimation(this);
+            }
+        }
+
         if (mQMUIProgressBarTextGenerator != null) {
             mText = mQMUIProgressBarTextGenerator.generateText(this, mValue, mMaxValue);
         }
+        if(((mType == TYPE_RECT || mType == TYPE_ROUND_RECT) && mBgRect == null) ||
+                ((mType == TYPE_CIRCLE || mType == TYPE_FILL_CIRCLE) && mCenterPoint == null)){
+            // npe protect, sometimes measure may not be called by parent.
+            configShape();
+        }
         if (mType == TYPE_RECT) {
             drawRect(canvas);
+        } else if (mType == TYPE_ROUND_RECT) {
+            drawRoundRect(canvas);
         } else {
-            drawCircle(canvas);
+            drawCircle(canvas, mType == TYPE_FILL_CIRCLE);
         }
     }
 
@@ -227,13 +317,27 @@ public class QMUIProgressBar extends View {
         }
     }
 
-    private void drawCircle(Canvas canvas) {
+    private void drawRoundRect(Canvas canvas) {
+        float round = mHeight / 2f;
+        canvas.drawRoundRect(mBgRect, round, round, mBackgroundPaint);
+        mProgressRect.set(getPaddingLeft(), getPaddingTop(), getPaddingLeft() + parseValueToWidth(), getPaddingTop() + mHeight);
+        canvas.drawRoundRect(mProgressRect, round, round, mPaint);
+        if (mText != null && mText.length() > 0) {
+            Paint.FontMetricsInt fontMetrics = mTextPaint.getFontMetricsInt();
+            float baseline = mBgRect.top + (mBgRect.height() - fontMetrics.bottom + fontMetrics.top) / 2 - fontMetrics.top;
+            canvas.drawText(mText, mBgRect.centerX(), baseline, mTextPaint);
+        }
+    }
+
+    private void drawCircle(Canvas canvas, boolean useCenter) {
         canvas.drawCircle(mCenterPoint.x, mCenterPoint.y, mCircleRadius, mBackgroundPaint);
         mArcOval.left = mCenterPoint.x - mCircleRadius;
         mArcOval.right = mCenterPoint.x + mCircleRadius;
         mArcOval.top = mCenterPoint.y - mCircleRadius;
         mArcOval.bottom = mCenterPoint.y + mCircleRadius;
-        canvas.drawArc(mArcOval, 270, 360 * mValue / mMaxValue, false, mPaint);
+        if (mValue > 0) {
+            canvas.drawArc(mArcOval, 270, 360f * mValue / mMaxValue, useCenter, mPaint);
+        }
         if (mText != null && mText.length() > 0) {
             Paint.FontMetricsInt fontMetrics = mTextPaint.getFontMetricsInt();
             float baseline = mArcOval.top + (mArcOval.height() - fontMetrics.bottom + fontMetrics.top) / 2 - fontMetrics.top;
@@ -252,20 +356,27 @@ public class QMUIProgressBar extends View {
     public void setProgress(int progress) {
         setProgress(progress, true);
     }
-    
+
     public void setProgress(int progress, boolean animated) {
         if (progress > mMaxValue || progress < 0) {
             return;
         }
-        if (isAnimating) {
-            isAnimating = false;
-            mAnimator.cancel();
+
+        if ((mPendingValue == PENDING_VALUE_NOT_SET && mValue == progress) ||
+                (mPendingValue != PENDING_VALUE_NOT_SET && mPendingValue == progress)) {
+            return;
         }
-        int oldValue = mValue;
-        mValue = progress;
-        if (animated) {
-            startAnimation(oldValue, progress);
+
+        if (!animated) {
+            mPendingValue = PENDING_VALUE_NOT_SET;
+            mValue = progress;
+            mNotifyProgressChangeAction.run();
+            invalidate();
         } else {
+            mAnimationDuration = Math.abs((int) (TOTAL_DURATION * (mValue - progress) / (float) mMaxValue));
+            mAnimationStartTime = System.currentTimeMillis();
+            mAnimationDistance = progress - mValue;
+            mPendingValue = progress;
             invalidate();
         }
     }
@@ -278,47 +389,18 @@ public class QMUIProgressBar extends View {
         mMaxValue = maxValue;
     }
 
-    private void startAnimation(int start, int end) {
-        mAnimator = ValueAnimator.ofInt(start, end);
-        int duration = Math.abs(TOTAL_DURATION * (end - start) / mMaxValue);
-        mAnimator.setDuration(duration);
-        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                mValue = (int) animation.getAnimatedValue();
-                invalidate();
-            }
-        });
-
-        mAnimator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                isAnimating = true;
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                isAnimating = false;
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-            }
-        });
-        mAnimator.start();
-    }
-
     public interface QMUIProgressBarTextGenerator {
         /**
          * 设置进度文案, {@link QMUIProgressBar} 会在进度更新时调用该方法获取要显示的文案
-         * @param value 当前进度值
+         *
+         * @param value    当前进度值
          * @param maxValue 最大进度值
          * @return 进度文案
          */
         String generateText(QMUIProgressBar progressBar, int value, int maxValue);
+    }
+
+    public interface OnProgressChangeListener {
+        void onProgressChange(QMUIProgressBar progressBar, int currentValue, int maxValue);
     }
 }

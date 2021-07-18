@@ -19,9 +19,9 @@ package com.qmuiteam.qmui.arch;
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
-import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Stack;
 
@@ -29,6 +29,7 @@ import java.util.Stack;
 public class QMUISwipeBackActivityManager implements Application.ActivityLifecycleCallbacks {
     private static QMUISwipeBackActivityManager sInstance;
     private Stack<Activity> mActivityStack = new Stack<>();
+    private Activity mCurrentActivity = null;
 
 
     @MainThread
@@ -51,40 +52,62 @@ public class QMUISwipeBackActivityManager implements Application.ActivityLifecyc
     }
 
     @Override
-    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+    public void onActivityCreated(@NonNull Activity activity, Bundle savedInstanceState) {
+        if(mCurrentActivity == null){
+            mCurrentActivity = activity;
+        }
         mActivityStack.add(activity);
     }
 
     @Override
-    public void onActivityDestroyed(Activity activity) {
+    public void onActivityDestroyed(@NonNull Activity activity) {
         mActivityStack.remove(activity);
+        if(mActivityStack.isEmpty()){
+            mCurrentActivity = null;
+        }
     }
 
     @Override
-    public void onActivityStarted(Activity activity) {
-
-    }
-
-    @Override
-    public void onActivityResumed(Activity activity) {
+    public void onActivityStarted(@NonNull Activity activity) {
 
     }
 
     @Override
-    public void onActivityPaused(Activity activity) {
+    public void onActivityResumed(@NonNull Activity activity) {
+        mCurrentActivity = activity;
+    }
+
+    @Override
+    public void onActivityPaused(@NonNull Activity activity) {
 
     }
 
     @Override
-    public void onActivityStopped(Activity activity) {
+    public void onActivityStopped(@NonNull Activity activity) {
 
     }
 
     @Override
-    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+    public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {
 
     }
 
+    @Nullable
+    public Activity getCurrentActivity(){
+        return mCurrentActivity;
+    }
+
+    public int getActivityCount(){
+        return mActivityStack.size();
+    }
+
+    @Nullable
+    public Activity getActivityInStack(int index){
+        if(index < 0 || index >= mActivityStack.size()){
+            return null;
+        }
+        return mActivityStack.get(index);
+    }
 
     /**
      *
@@ -116,6 +139,6 @@ public class QMUISwipeBackActivityManager implements Application.ActivityLifecyc
     }
 
     public boolean canSwipeBack() {
-        return mActivityStack.size() > 1;
+        return mActivityStack.size() > 2 || (mActivityStack.size() == 2 && !mActivityStack.get(0).isFinishing());
     }
 }

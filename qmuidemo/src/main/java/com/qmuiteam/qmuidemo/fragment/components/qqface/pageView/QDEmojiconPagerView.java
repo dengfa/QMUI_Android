@@ -18,7 +18,7 @@ package com.qmuiteam.qmuidemo.fragment.components.qqface.pageView;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v4.view.ViewCompat;
+import androidx.core.view.ViewCompat;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -45,7 +45,7 @@ public class QDEmojiconPagerView extends QDQQFaceBasePagerView {
             emojiconTextView.setTextSize(14);
             int padding = QMUIDisplayHelper.dp2px(getContext(), 16);
             ViewCompat.setBackground(emojiconTextView, QMUIResHelper.getAttrDrawable(
-                    getContext(), R.attr.qmui_s_list_item_bg_with_border_bottom));
+                    getContext(), R.attr.qmui_skin_support_s_list_item_bg_1));
             emojiconTextView.setPadding(padding, padding, padding, padding);
             emojiconTextView.setMaxLines(8);
             emojiconTextView.setTextColor(Color.BLACK);

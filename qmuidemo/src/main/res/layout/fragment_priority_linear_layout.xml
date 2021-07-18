@@ -26,7 +26,8 @@
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/qmui_topbar_height"
         android:fillViewport="true"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        app:qmui_skin_background="?attr/app_skin_common_background">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -298,7 +299,8 @@
                     android:layout_marginRight="4dp"
                     android:ellipsize="end"
                     android:singleLine="true"
-                    android:text="测试文案测试文案测试"/>
+                    android:text="测试文案测试文案测试"
+                    app:qmui_layout_priority="disposable"/>
 
                 <TextView
                     android:layout_width="wrap_content"

@@ -23,6 +23,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.qmuiteam.qmui.skin.QMUISkinManager;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet;
 import com.qmuiteam.qmuidemo.R;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import androidx.core.content.ContextCompat;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -43,7 +45,7 @@ import butterknife.ButterKnife;
  * Created by cgspine on 15/9/15.
  */
 
-@Widget(widgetClass = QMUIBottomSheet.class, iconRes = R.mipmap.icon_grid_botton_sheet)
+@Widget(widgetClass = QMUIBottomSheet.class, iconRes = R.mipmap.icon_grid_bottom_sheet)
 public class QDBottomSheetFragment extends BaseFragment {
 
     @BindView(R.id.topbar)
@@ -77,7 +79,14 @@ public class QDBottomSheetFragment extends BaseFragment {
 
     private void initListView() {
         String[] listItems = new String[]{
-                "BottomSheet List",
+                "BottomSheet List:Simple",
+                "BottomSheet List:With Icon",
+                "BottomSheet List:GravityCenter",
+                "BottomSheet List:With Title",
+                "BottomSheet List:With Cancel Btn",
+                "BottomSheet List:Drag Dismiss",
+                "BottomSheet List:Many Items",
+                "BottomSheet List:With Mark",
                 "BottomSheet Grid"
         };
         List<String> data = new ArrayList<>();
@@ -90,9 +99,46 @@ public class QDBottomSheetFragment extends BaseFragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
                     case 0:
-                        showSimpleBottomSheetList();
+                        showSimpleBottomSheetList(
+                                false, false, false, null,
+                                3, false, false);
                         break;
                     case 1:
+                        showSimpleBottomSheetList(
+                                false, false, true, null,
+                                3, false, false);
+                        break;
+                    case 2:
+                        showSimpleBottomSheetList(
+                                true, false, false, null,
+                                3, false, false);
+                        break;
+                    case 3:
+                        showSimpleBottomSheetList(
+                                true, false, false, "This is Title!!!",
+                                3, false, false);
+                        break;
+                    case 4:
+                        showSimpleBottomSheetList(
+                                true, true, false, "This is Title!!!",
+                                3, false, false);
+                        break;
+                    case 5:
+                        showSimpleBottomSheetList(
+                                true, true, false, "This is Title!!!",
+                                3, true, false);
+                        break;
+                    case 6:
+                        showSimpleBottomSheetList(
+                                true, true, false, "This is Title!!!",
+                                100, true, false);
+                        break;
+                    case 7:
+                        showSimpleBottomSheetList(
+                                false, true, false, "This is Title!!!",
+                                100, true, true);
+                        break;
+                    case 8:
                         showSimpleBottomSheetGrid();
                         break;
                 }
@@ -101,20 +147,39 @@ public class QDBottomSheetFragment extends BaseFragment {
     }
 
     // ================================ 生成不同类型的BottomSheet
-    private void showSimpleBottomSheetList() {
-        new QMUIBottomSheet.BottomListSheetBuilder(getActivity())
-                .addItem("Item 1")
-                .addItem("Item 2")
-                .addItem("Item 3")
+    private void showSimpleBottomSheetList(boolean gravityCenter,
+                                           boolean addCancelBtn,
+                                           boolean withIcon,
+                                           CharSequence title,
+                                           int itemCount,
+                                           boolean allowDragDismiss,
+                                           boolean withMark) {
+        QMUIBottomSheet.BottomListSheetBuilder builder = new QMUIBottomSheet.BottomListSheetBuilder(getActivity());
+        builder.setGravityCenter(gravityCenter)
+                .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
+                .setTitle(title)
+                .setAddCancelBtn(addCancelBtn)
+                .setAllowDrag(allowDragDismiss)
+                .setNeedRightMark(withMark)
                 .setOnSheetItemClickListener(new QMUIBottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {
                     @Override
                     public void onClick(QMUIBottomSheet dialog, View itemView, int position, String tag) {
                         dialog.dismiss();
                         Toast.makeText(getActivity(), "Item " + (position + 1), Toast.LENGTH_SHORT).show();
                     }
-                })
-                .build()
-                .show();
+                });
+        if(withMark){
+            builder.setCheckedIndex(40);
+        }
+        for (int i = 1; i <= itemCount; i++) {
+            if(withIcon){
+                builder.addItem(ContextCompat.getDrawable(getContext(), R.mipmap.icon_tabbar_lab), "Item " + i);
+            }else{
+                builder.addItem("Item " + i);
+            }
+
+        }
+        builder.build().show();
     }
 
     private void showSimpleBottomSheetGrid() {
@@ -129,6 +194,8 @@ public class QDBottomSheetFragment extends BaseFragment {
                 .addItem(R.mipmap.icon_more_operation_share_weibo, "分享到微博", TAG_SHARE_WEIBO, QMUIBottomSheet.BottomGridSheetBuilder.FIRST_LINE)
                 .addItem(R.mipmap.icon_more_operation_share_chat, "分享到私信", TAG_SHARE_CHAT, QMUIBottomSheet.BottomGridSheetBuilder.FIRST_LINE)
                 .addItem(R.mipmap.icon_more_operation_save, "保存到本地", TAG_SHARE_LOCAL, QMUIBottomSheet.BottomGridSheetBuilder.SECOND_LINE)
+                .setAddCancelBtn(true)
+                .setSkinManager(QMUISkinManager.defaultInstance(getContext()))
                 .setOnSheetItemClickListener(new QMUIBottomSheet.BottomGridSheetBuilder.OnSheetItemClickListener() {
                     @Override
                     public void onClick(QMUIBottomSheet dialog, View itemView) {

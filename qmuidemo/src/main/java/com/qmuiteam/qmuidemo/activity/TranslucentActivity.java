@@ -17,11 +17,15 @@
 package com.qmuiteam.qmuidemo.activity;
 
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Toast;
 
+import com.qmuiteam.qmui.arch.annotation.LatestVisitRecord;
+import com.qmuiteam.qmui.arch.record.RecordArgumentEditor;
 import com.qmuiteam.qmui.widget.QMUITopBar;
+import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.base.BaseActivity;
 
@@ -33,9 +37,10 @@ import butterknife.ButterKnife;
  * Created by Kayo on 2016/12/12.
  */
 
+@LatestVisitRecord
 public class TranslucentActivity extends BaseActivity {
 
-    @BindView(R.id.topbar) QMUITopBar mTopBar;
+    @BindView(R.id.topbar) QMUITopBarLayout mTopBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,11 +50,12 @@ public class TranslucentActivity extends BaseActivity {
         ButterKnife.bind(this, root);
         initTopBar();
         setContentView(root);
-
+        if (getIntent().getBooleanExtra("test_activity", false)) {
+            Toast.makeText(this, "恢复到最近阅读(Boolean)", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void initTopBar() {
-        mTopBar.setBackgroundColor(ContextCompat.getColor(this, R.color.app_color_theme_4));
         mTopBar.addLeftBackImageButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -59,5 +65,11 @@ public class TranslucentActivity extends BaseActivity {
         });
 
         mTopBar.setTitle("沉浸式状态栏示例");
+    }
+
+
+    @Override
+    public void onCollectLatestVisitArgument(RecordArgumentEditor editor) {
+        editor.putBoolean("test_activity", true);
     }
 }
