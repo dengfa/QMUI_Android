@@ -50,6 +50,7 @@ import com.qmuiteam.qmuidemo.fragment.components.qqface.QDQQFaceFragment;
 import com.qmuiteam.qmuidemo.fragment.components.tablayout.ui.TabLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.section.QDSectionLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.viewpager.QDViewPagerFragment;
+import com.qmuiteam.qmuidemo.fragment.components.viewpager.ShadowFragment;
 import com.qmuiteam.qmuidemo.fragment.lab.QDAnimationListViewFragment;
 import com.qmuiteam.qmuidemo.fragment.lab.QDArchTestFragment;
 import com.qmuiteam.qmuidemo.fragment.lab.QDContinuousNestedScrollFragment;
@@ -135,6 +136,7 @@ public class QDDataManager {
         mComponentsNames.add(TabLayoutFragment.class);
         mComponentsNames.add(BottomSheetFragment.class);
         mComponentsNames.add(HorizontalRefreshFragment.class);
+        mComponentsNames.add(ShadowFragment.class);
     }
 
     /**
