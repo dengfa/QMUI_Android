@@ -489,6 +489,8 @@
 
         <!-- title -->
         <attr name="tl_textsize"/>
+        <attr name="tl_textSelectSize" format="dimension" />
+        <attr name="tl_textUnselectSize" format="dimension" />
         <attr name="tl_textSelectColor"/>
         <attr name="tl_textUnselectColor"/>
         <attr name="tl_textBold"/>
