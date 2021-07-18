@@ -1,5 +1,6 @@
 package com.qmuiteam.qmuidemo.fragment.components.endlessrv.adapter;
 
+import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
@@ -23,6 +24,7 @@ public class SimpleStringAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             mTextView = v;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return super.toString() + " '" + mTextView.getText();
@@ -43,13 +45,14 @@ public class SimpleStringAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         this.pending = pending;
     }
 
+    @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new ItemViewHolder(new TextView(parent.getContext()));
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof ItemViewHolder) {
             ItemViewHolder itemViewHolder = (ItemViewHolder) holder;
             itemViewHolder.mBoundString = mValues.get(position);

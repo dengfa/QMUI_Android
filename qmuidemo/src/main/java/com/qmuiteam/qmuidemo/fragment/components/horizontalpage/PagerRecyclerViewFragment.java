@@ -16,7 +16,6 @@
 
 package com.qmuiteam.qmuidemo.fragment.components.horizontalpage;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,24 +26,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-
-import com.qmuiteam.qmui.widget.customRecyclerView.EndlessRecyclerViewAdapter2;
 import com.qmuiteam.qmui.widget.customRecyclerView.pagerRecyclerView.DividerItemDecoration;
 import com.qmuiteam.qmui.widget.customRecyclerView.pagerRecyclerView.HorizontalPageLayoutManager;
 import com.qmuiteam.qmui.widget.customRecyclerView.pagerRecyclerView.PagingItemDecoration;
 import com.qmuiteam.qmui.widget.customRecyclerView.pagerRecyclerView.PagingScrollHelper;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.base.BaseFragment;
-import com.qmuiteam.qmuidemo.fragment.components.endlessrv.Cheeses;
-import com.qmuiteam.qmuidemo.fragment.components.endlessrv.adapter.SimpleStringAdapter;
 import com.qmuiteam.qmuidemo.fragment.components.horizontalpage.adapter.MyAdapter;
 import com.qmuiteam.qmuidemo.lib.annotation.Widget;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
