@@ -38,6 +38,7 @@ import com.qmuiteam.qmuidemo.fragment.components.QDProgressBarFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDPullRefreshFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDRadiusImageViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDRecyclerViewDraggableScrollBarFragment;
+import com.qmuiteam.qmuidemo.fragment.components.motionlayout.Motion1Fragment;
 import com.qmuiteam.qmuidemo.fragment.components.swipeAction.QDRVSwipeActionFragment;
 import com.qmuiteam.qmuidemo.fragment.components.swipeAction.QDRVSwipeMutiActionFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDSliderFragment;
@@ -103,6 +104,7 @@ public class QDDataManager {
      */
     private void initComponentsDesc() {
         mComponentsNames = new ArrayList<>();
+        mComponentsNames.add(Motion1Fragment.class);
         mComponentsNames.add(QDButtonFragment.class);
         mComponentsNames.add(QDDialogFragment.class);
         mComponentsNames.add(QDFloatLayoutFragment.class);
