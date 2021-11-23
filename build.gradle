@@ -6,12 +6,19 @@ buildscript {
         mavenLocal()
         google()
         jcenter()
+
+        //引入本地 Maven 仓库
+        maven{
+            url uri('assets-journalist-plugin')
+        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.4'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 //        classpath 'com.qmuiteam:skin-maker-plugin:0.0.1'
+
+        classpath 'com.assetsjournalist:assetsplugin:1.0.0'
     }
 }
 

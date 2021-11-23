@@ -1,0 +1,51 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy'
+    id "com.gradle.plugin-publish" version "0.10.1"
+}
+
+//引入相关的依赖
+dependencies {
+    //Groovy DSL
+    implementation gradleApi()
+    //Gradle DSL
+    implementation localGroovy()
+    implementation 'com.squareup:javapoet:1.3.0'
+    implementation 'org.javassist:javassist:3.20.0-GA'
+    implementation 'com.squareup:kotlinpoet:1.5.0'
+}
+apply plugin: 'maven'
+
+//引入相关的仓库
+repositories {
+    mavenCentral()
+    jcenter()
+    google()
+}
+
+//Gradle 配置的方式注册插件
+gradlePlugin {
+    plugins {
+        greeting {
+            // 插件id
+            id = 'assetsplugin'
+            // 插件实现类
+            implementationClass = 'com.assetsjournalist.AssetsPlugin'
+        }
+    }
+}
+
+
+//将插件打包上传到本地maven仓库
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            //指定 maven 发布三剑客
+            pom.groupId = 'com.assetsjournalist'
+            pom.artifactId = 'assetsplugin'
+            pom.version = '1.0.0'
+            //指定本地 maven 仓库的路径，这里我指定的就是当前 Module 目录下
+            repository(url: uri('../assets-journalist-plugin'))
+        }
+    }
+}
