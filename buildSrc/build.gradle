@@ -1,0 +1,33 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.6.0"
+    id 'java-gradle-plugin'
+    id 'groovy'
+    id "com.gradle.plugin-publish" version "0.10.1"
+}
+
+//引入相关的仓库
+repositories {
+    google()
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    //Groovy DSL
+    implementation gradleApi()
+    //Gradle DSL
+    implementation localGroovy()
+    implementation 'com.squareup:kotlinpoet:1.5.0'
+}
+
+//Gradle 配置的方式注册插件
+gradlePlugin {
+    plugins {
+        greeting {
+            // 插件id
+            id = 'assetspluginKt'
+            // 插件实现类
+            implementationClass = 'com.vincent.assetsplugin.AssetsPluginKt'
+        }
+    }
+}

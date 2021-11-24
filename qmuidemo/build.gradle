@@ -3,7 +3,10 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 //apply plugin: 'AFGPlugin'
-apply plugin: 'assetsplugin'
+//apply plugin: 'assetsplugin'
+apply plugin: 'assetspluginKt'
+apply plugin: "com.github.utilx.android-assets-journalist"
+
 
 def getVersion() {
   def gitVersion

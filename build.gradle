@@ -11,14 +11,20 @@ buildscript {
         maven{
             url uri('assets-journalist-plugin')
         }
+
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.4'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10"
 //        classpath 'com.qmuiteam:skin-maker-plugin:0.0.1'
 
         classpath 'com.assetsjournalist:assetsplugin:1.0.0'
+
+        classpath("com.github.utilx:android-assets-journalist:0.11.1")
     }
 }
 

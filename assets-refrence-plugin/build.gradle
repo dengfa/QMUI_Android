@@ -34,7 +34,7 @@ gradlePlugin {
 
 
 //将插件打包上传到本地maven仓库
-uploadArchives {
+/*uploadArchives {
     repositories {
         mavenDeployer {
             //指定 maven 发布三剑客
@@ -45,4 +45,4 @@ uploadArchives {
             repository(url: uri('../assets-refrence-plugin'))
         }
     }
-}
+}*/
