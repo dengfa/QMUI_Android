@@ -1,3 +1,5 @@
+import groovy.xml.StreamingMarkupBuilder
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
@@ -7,16 +9,15 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'AssetsPluginKtBs'
 apply plugin: "com.github.utilx.android-assets-journalist"
 
-
 def getVersion() {
-  def gitVersion
-  try {
-	def cmd = 'git rev-list HEAD --count'
-	gitVersion = cmd.execute().text.trim().toInteger()
-  } catch (Exception e) {
-	gitVersion = 1
-  }
-  return gitVersion
+    def gitVersion
+    try {
+        def cmd = 'git rev-list HEAD --count'
+        gitVersion = cmd.execute().text.trim().toInteger()
+    } catch (Exception e) {
+        gitVersion = 1
+    }
+    return gitVersion
 }
 
 def gitVersion = getVersion()
@@ -29,13 +30,13 @@ android {
         if (propFile.exists()) {
             properties.load(propFile.newDataInputStream())
         }
-      /*  release {
-            keyAlias properties.getProperty("RELEASE_KEY_ALIAS")
-            keyPassword properties.getProperty("RELEASE_KEY_PASSWORD")
-            storeFile file('qmuidemo.keystore')
-            storePassword properties.getProperty("RELEASE_STORE_PASSWORD")
-            v2SigningEnabled false
-        }*/
+        /*  release {
+              keyAlias properties.getProperty("RELEASE_KEY_ALIAS")
+              keyPassword properties.getProperty("RELEASE_KEY_PASSWORD")
+              storeFile file('qmuidemo.keystore')
+              storePassword properties.getProperty("RELEASE_STORE_PASSWORD")
+              v2SigningEnabled false
+          }*/
     }
     compileSdkVersion parent.ext.compileSdkVersion
 
@@ -65,7 +66,7 @@ android {
     }
     // 避免 lint 检测出错时停止构建
     lintOptions {
-      abortOnError false
+        abortOnError false
     }
 }
 
@@ -74,8 +75,6 @@ android {
 //skinMaker{
 //    file rootProject.file('qmuidemo-skin-code-generator-source')
 //}
-
-
 
 // 加@aar与不加@aar的区别：
 // http://stackoverflow.com/questions/30157575/why-should-i-include-a-gradle-dependency-as-aar
@@ -87,9 +86,9 @@ dependencies {
     implementation "com.jakewharton:butterknife:$butterknifeVersion"
     kapt "com.jakewharton:butterknife-compiler:$butterknifeVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-//    implementation 'com.qmuiteam:qmuilint:1.0.1'
-//    implementation 'com.qmuiteam:arch:0.3.1'
-//    implementation 'com.qmuiteam:qmui:1.2.0'
+    //    implementation 'com.qmuiteam:qmuilint:1.0.1'
+    //    implementation 'com.qmuiteam:arch:0.3.1'
+    //    implementation 'com.qmuiteam:qmui:1.2.0'
     implementation project(':lib')
     api project(':lint')
     implementation project(':qmui')
@@ -109,3 +108,79 @@ dependencies {
     //    androidTestImplementation 'com.androidx.test:rules:1.0.2' // Set this dependency to use JUnit 4 rules
     //    androidTestImplementation 'com.androidx.test.espresso:espresso-core:3.0.2' // Set this dependency to build and run Espresso tests
 }
+
+def xmlDir = new File(getProjectDir(), 'src/main/res/xml')
+if (!xmlDir.exists()) {
+    xmlDir.mkdirs()
+}
+def networkSecurityConfigFile = new File(xmlDir, 'network_security_config.xml')
+if (networkSecurityConfigFile.exists()) {
+    networkSecurityConfigFile.delete()
+}
+/**
+*<?xml version="1.0" encoding="utf-8"?>
+*<network-security-config>
+*    <base-config cleartextTrafficPermitted="true">
+*        <trust-anchors>
+*            <certificates
+*                overridePins="true"
+*                src="system" />
+*            <certificates
+*                overridePins="true"
+*                src="user" />
+*        </trust-anchors>
+*    </base-config>
+*</network-security-config>
+*
+* 不让charles抓release包的https请求
+*<?xml version='1.0' encoding='UTF-8'?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted='true'>
+        <trust-anchors>
+            <trust-anchors>
+                <certificates src="system" overridePins="true" />
+                <certificates src="user" overridePins="true" />
+            </trust-anchors>
+        </trust-anchors>
+    </base-config>
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src='user' />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>
+*/
+
+def xmlBuilder = new StreamingMarkupBuilder()
+xmlBuilder.encoding = 'UTF-8'
+def xmlDebug = {
+    mkp.xmlDeclaration()
+    "network-security-config"() {
+        "base-config"(cleartextTrafficPermitted : "true"){
+            "trust-anchors"(){
+                certificates(overridePins: "true", src: "system")
+                certificates(overridePins: "true", src: "user")
+            }
+        }
+    }
+}
+
+def xmlRelease = {
+    mkp.xmlDeclaration()
+    "network-security-config"() {
+        "base-config"(cleartextTrafficPermitted : "true"){
+            "trust-anchors"(){
+                certificates(overridePins: "true", src: "system")
+                certificates(overridePins: "true", src: "user")
+            }
+        }
+
+        "debug-overrides"(){
+            "trust-anchors"(){
+                certificates(src: "user")
+            }
+        }
+    }
+}
+
+new OutputStreamWriter(new FileOutputStream(networkSecurityConfigFile), 'utf-8') << xmlBuilder.bind(xmlRelease)
