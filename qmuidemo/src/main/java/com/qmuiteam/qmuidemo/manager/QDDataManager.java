@@ -25,6 +25,7 @@ import com.qmuiteam.qmuidemo.fragment.components.QDButtonFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDCollapsingTopBarLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDDialogFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDEmptyViewFragment;
+import com.qmuiteam.qmuidemo.fragment.components.calendar.WeekViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.coordinator.BottomSheetFragment;
 import com.qmuiteam.qmuidemo.fragment.components.endlessrv.QDEndlessRecyclerViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDFloatLayoutFragment;
@@ -141,6 +142,7 @@ public class QDDataManager {
         mComponentsNames.add(BottomSheetFragment.class);
         mComponentsNames.add(HorizontalRefreshFragment.class);
         mComponentsNames.add(ShadowFragment.class);
+        mComponentsNames.add(WeekViewFragment.class);
     }
 
     /**
