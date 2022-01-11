@@ -24,6 +24,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import butterknife.BindView
 import butterknife.ButterKnife
+import com.qmuiteam.qmui.calendar.WeekTask
+import com.qmuiteam.qmui.calendar.WeekView
 import com.qmuiteam.qmui.kotlin.onClick
 import com.qmuiteam.qmui.widget.QMUITopBarLayout
 import com.qmuiteam.qmuidemo.R
@@ -40,6 +42,9 @@ class WeekViewFragment : BaseFragment() {
 
     @BindView(R.id.topbar)
     internal lateinit var mTopBar: QMUITopBarLayout
+
+    @BindView(R.id.weekView)
+    internal lateinit var weekView: WeekView
 
     @BindView(R.id.rcWeekHeader)
     internal lateinit var rcWeekHeader: RecyclerView
@@ -74,6 +79,12 @@ class WeekViewFragment : BaseFragment() {
             days.add(calendar)
         }
 
+        //todo
+        val tasks = arrayListOf<WeekTask>() //2022.1.11 8:00 - 8:45
+        tasks.add(WeekTask(1641859200, 1641861900, "task1")) //2022.1.15 8:45 - 12:00
+        tasks.add(WeekTask(1642207500, 1642219200, "task2"))
+        weekView.setTasks(tasks, firstOfWeek.timeInMillis)
+
         rcWeekHeader.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         val weekHeaderAdapter = WeekHeaderAdapter()
         rcWeekHeader.adapter = weekHeaderAdapter
@@ -91,7 +102,7 @@ class WeekViewFragment : BaseFragment() {
 
 class WeekHeaderAdapter : RecyclerView.Adapter<ViewHolder>() {
     private val days = arrayListOf<Calendar>()
-    val weekStr = arrayListOf("日", "一", "二", "三", "四", "五", "六")
+    private val weekStr = arrayListOf("日", "一", "二", "三", "四", "五", "六")
 
     fun setData(data: List<Calendar>) {
         days.clear()
