@@ -82,7 +82,7 @@ class WeekViewFragment : BaseFragment() {
         //todo
         val tasks = arrayListOf<WeekTask>() //2022.1.11 8:00 - 8:45
         tasks.add(WeekTask(1641859200, 1641861900, "task1")) //2022.1.15 8:45 - 12:00
-        tasks.add(WeekTask(1642207500, 1642219200, "task2"))
+        //tasks.add(WeekTask(1642207500, 1642219200, "task2"))
         weekView.setTasks(tasks, firstOfWeek.timeInMillis)
 
         rcWeekHeader.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
