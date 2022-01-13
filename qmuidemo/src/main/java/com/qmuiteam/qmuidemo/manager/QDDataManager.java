@@ -25,7 +25,7 @@ import com.qmuiteam.qmuidemo.fragment.components.QDButtonFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDCollapsingTopBarLayoutFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDDialogFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDEmptyViewFragment;
-import com.qmuiteam.qmuidemo.fragment.components.calendar.WeekViewFragment;
+import com.qmuiteam.qmuidemo.fragment.components.calendar.CalendarFragment;
 import com.qmuiteam.qmuidemo.fragment.components.coordinator.BottomSheetFragment;
 import com.qmuiteam.qmuidemo.fragment.components.endlessrv.QDEndlessRecyclerViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDFloatLayoutFragment;
@@ -41,7 +41,6 @@ import com.qmuiteam.qmuidemo.fragment.components.QDRadiusImageViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDRecyclerViewDraggableScrollBarFragment;
 import com.qmuiteam.qmuidemo.fragment.components.motionlayout.Motion1Fragment;
 import com.qmuiteam.qmuidemo.fragment.components.swipeAction.QDRVSwipeActionFragment;
-import com.qmuiteam.qmuidemo.fragment.components.swipeAction.QDRVSwipeMutiActionFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDSliderFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDSpanTouchFixTextViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDTabSegmentFragment;
@@ -142,7 +141,7 @@ public class QDDataManager {
         mComponentsNames.add(BottomSheetFragment.class);
         mComponentsNames.add(HorizontalRefreshFragment.class);
         mComponentsNames.add(ShadowFragment.class);
-        mComponentsNames.add(WeekViewFragment.class);
+        mComponentsNames.add(CalendarFragment.class);
     }
 
     /**

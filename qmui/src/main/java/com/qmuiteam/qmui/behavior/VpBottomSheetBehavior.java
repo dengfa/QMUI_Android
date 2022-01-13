@@ -41,8 +41,9 @@ import androidx.customview.view.AbsSavedState;
 import androidx.customview.widget.ViewDragHelper;
 import androidx.viewpager.widget.ViewPager;
 import androidx.viewpager.widget.ViewPagerUtils;
-import com.google.android.material.R;
 import com.google.android.material.shape.MaterialShapeDrawable;
+import com.qmuiteam.qmui.R;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;

@@ -25,6 +25,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.qmuiteam.qmui.QMUILog;
+import com.qmuiteam.qmui.ApplicationHolder;
 import com.qmuiteam.qmui.arch.QMUISwipeBackActivityManager;
 import com.qmuiteam.qmui.qqface.QMUIQQFaceCompiler;
 import com.qmuiteam.qmui.skin.QMUISkinMaker;
@@ -50,6 +51,7 @@ public class QDApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        ApplicationHolder.application = this;
         context = getApplicationContext();
         if (LeakCanary.isInAnalyzerProcess(this)) {
             return;

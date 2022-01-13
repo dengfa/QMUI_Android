@@ -1,21 +1,8 @@
-/*
- * Tencent is pleased to support the open source community by making QMUI_Android available.
- *
- * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
- *
- * Licensed under the MIT License (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- *
- * http://opensource.org/licenses/MIT
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is
- * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.qmuiteam.qmuidemo.fragment.components.calendar
 
+import android.os.Bundle
 import android.util.Log
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,52 +11,57 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import butterknife.BindView
 import butterknife.ButterKnife
-import com.qmuiteam.qmui.calendar.WeekTask
-import com.qmuiteam.qmui.calendar.WeekView
-import com.qmuiteam.qmui.kotlin.onClick
-import com.qmuiteam.qmui.widget.QMUITopBarLayout
+import com.qmuiteam.qmui.res
+import com.qmuiteam.qmui.calendar.CalendarScheduleView
+import com.qmuiteam.qmui.calendar.format
+import com.qmuiteam.qmui.calendar.isSameDay
 import com.qmuiteam.qmuidemo.R
-import com.qmuiteam.qmuidemo.base.BaseFragment
-import com.qmuiteam.qmuidemo.fragment.components.calendar.WeekHeaderAdapter.ViewHolder
-import com.qmuiteam.qmuidemo.lib.annotation.Widget
-import com.qmuiteam.qmuidemo.manager.QDDataManager
-import com.qmuiteam.qmuidemo.model.QDItemDescription
-import java.util.Calendar
-import java.util.Date
+import java.util.*
 
-@Widget(name = "CalendarWeekView", iconRes = R.mipmap.icon_grid_status_bar_helper)
-class WeekViewFragment : BaseFragment() {
+private const val ARG_DAY_TIME_STAMP = "arg_day_time_stamp"
 
-    @BindView(R.id.topbar)
-    internal lateinit var mTopBar: QMUITopBarLayout
+class CalendarWeekFragment : Fragment() {
+    private var dayTimeStamp: Long = 0
 
     @BindView(R.id.weekView)
-    internal lateinit var weekView: WeekView
+    internal lateinit var weekView: CalendarScheduleView
 
     @BindView(R.id.rcWeekHeader)
     internal lateinit var rcWeekHeader: RecyclerView
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let {
+            dayTimeStamp = it.getLong(ARG_DAY_TIME_STAMP)
+        }
+    }
 
-    private lateinit var mQDItemDescription: QDItemDescription
-
-
-    override fun onCreateView(): View {
-        val view = LayoutInflater.from(activity).inflate(R.layout.fragment_calendar_week_view, null)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
+        // Inflate the layout for this fragment
+        val view = inflater.inflate(R.layout.fragment_calendar_week, container, false)
         ButterKnife.bind(this, view)
-        mQDItemDescription = QDDataManager.getInstance().getDescription(this.javaClass)
-        initTopBar()
-        initCalendar()
         return view
     }
 
-    private fun initTopBar() {
-        mTopBar.addLeftBackImageButton().onClick { popBackStack() }
-        mTopBar.setTitle(mQDItemDescription.name)
+    companion object {
+        @JvmStatic
+        fun newInstance(firstDayOfWeekTimeStamp: Long) =
+                CalendarWeekFragment().apply {
+                    arguments = Bundle().apply {
+                        putLong(ARG_DAY_TIME_STAMP, firstDayOfWeekTimeStamp)
+                    }
+                }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initCalendar()
     }
 
     private fun initCalendar() {
         val days = arrayListOf<Calendar>()
-        val firstOfWeek = getFirstOfWeek(Date())
+        val firstOfWeek = getFirstOfWeek(Date(dayTimeStamp))
         days.add(firstOfWeek)
         Log.d("vincent", "getFirstOfWeek $firstOfWeek")
         for (index in 1..6) {
@@ -79,16 +71,11 @@ class WeekViewFragment : BaseFragment() {
             days.add(calendar)
         }
 
-        //todo
-        val tasks = arrayListOf<WeekTask>() //2022.1.11 8:00 - 8:45
-        tasks.add(WeekTask(1641859200, 1641861900, "task1")) //2022.1.15 8:45 - 12:00
-        //tasks.add(WeekTask(1642207500, 1642219200, "task2"))
-        weekView.setTasks(tasks, firstOfWeek.timeInMillis)
-
         rcWeekHeader.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         val weekHeaderAdapter = WeekHeaderAdapter()
         rcWeekHeader.adapter = weekHeaderAdapter
         weekHeaderAdapter.setData(days)
+        weekView.setFirstOfWeekTimeStamp(firstOfWeek.timeInMillis)
     }
 
 
@@ -100,9 +87,14 @@ class WeekViewFragment : BaseFragment() {
     }
 }
 
-class WeekHeaderAdapter : RecyclerView.Adapter<ViewHolder>() {
+class WeekHeaderAdapter : RecyclerView.Adapter<WeekHeaderAdapter.ViewHolder>() {
     private val days = arrayListOf<Calendar>()
     private val weekStr = arrayListOf("日", "一", "二", "三", "四", "五", "六")
+    private val currentDay by lazy {
+        val calendar = Calendar.getInstance()
+        calendar.time = Date()
+        calendar
+    }
 
     fun setData(data: List<Calendar>) {
         days.clear()
@@ -113,6 +105,7 @@ class WeekHeaderAdapter : RecyclerView.Adapter<ViewHolder>() {
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvWeek: TextView = itemView.findViewById(R.id.tvWeek)
         val tvDate: TextView = itemView.findViewById(R.id.tvDate)
+        val todayIndicator: View = itemView.findViewById(R.id.todayIndicator)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -127,6 +120,17 @@ class WeekHeaderAdapter : RecyclerView.Adapter<ViewHolder>() {
         val calendar = days[position]
         holder.tvWeek.text = weekStr[(calendar.get(Calendar.DAY_OF_WEEK) - 1) % weekStr.size]
         holder.tvDate.text = "${calendar.get(Calendar.DAY_OF_MONTH)}"
+
+        Log.d("vincent", "calendar ${calendar.time.format()}  currentDay ${currentDay.time.format()}  isSameDay ${calendar.isSameDay(currentDay)}")
+        if (calendar.isSameDay(currentDay)) {
+            holder.tvWeek.setTextColor(res.getColor(R.color.app_color_blue))
+            holder.tvDate.setTextColor(res.getColor(R.color.app_color_blue))
+            holder.todayIndicator.visibility = View.VISIBLE
+        } else {
+            holder.tvWeek.setTextColor(res.getColor(R.color.qmui_config_color_black))
+            holder.tvDate.setTextColor(res.getColor(R.color.qmui_config_color_black))
+            holder.todayIndicator.visibility = View.INVISIBLE
+        }
     }
 
     override fun getItemCount(): Int {

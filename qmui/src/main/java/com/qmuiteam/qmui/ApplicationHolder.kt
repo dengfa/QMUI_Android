@@ -1,0 +1,1 @@
+package com.qmuiteam.qmuiimport android.app.Application/** * Created by dengfa on 2022/1/14 */object ApplicationHolder {    lateinit var application: Application}

@@ -450,4 +450,10 @@
         <item name="android:windowExitAnimation">@anim/shrink_from_bottomleft_to_topright</item>
     </style>
 
+    <declare-styleable name="CalendarScheduleView">
+        <attr name="style" format="enum">
+            <enum name="week" value="0"/>
+            <enum name="day" value="1"/>
+        </attr>
+    </declare-styleable>
 </resources>
