@@ -40,6 +40,7 @@ import com.qmuiteam.qmuidemo.fragment.components.QDPullRefreshFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDRadiusImageViewFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDRecyclerViewDraggableScrollBarFragment;
 import com.qmuiteam.qmuidemo.fragment.components.motionlayout.Motion1Fragment;
+import com.qmuiteam.qmuidemo.fragment.components.recycler.RecyclerFragment;
 import com.qmuiteam.qmuidemo.fragment.components.swipeAction.QDRVSwipeActionFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDSliderFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDSpanTouchFixTextViewFragment;
@@ -142,6 +143,7 @@ public class QDDataManager {
         mComponentsNames.add(HorizontalRefreshFragment.class);
         mComponentsNames.add(ShadowFragment.class);
         mComponentsNames.add(CalendarFragment.class);
+        mComponentsNames.add(RecyclerFragment.class);
     }
 
     /**
