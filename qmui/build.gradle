@@ -56,6 +56,7 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     api 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'com.airbnb.android:lottie:5.0.3'
 }
 
 // deploy
