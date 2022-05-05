@@ -29,12 +29,14 @@ import com.qmuiteam.qmui.toPx
 import com.qmuiteam.qmui.widget.QMUITopBarLayout
 import com.qmuiteam.qmui.widget.guide.EditorGuideView
 import com.qmuiteam.qmui.widget.guide.GuideLiteView
+import com.qmuiteam.qmui.widget.guide.MuseEditorGuideView
 import com.qmuiteam.qmui.widget.guide.TipsView
 import com.qmuiteam.qmuidemo.R
 import com.qmuiteam.qmuidemo.base.BaseFragment
 import com.qmuiteam.qmuidemo.lib.annotation.Widget
 import com.qmuiteam.qmuidemo.manager.QDDataManager
 import com.qmuiteam.qmuidemo.model.QDItemDescription
+import kotlinx.android.synthetic.main.fragment_guide.*
 
 @Widget(name = "Guide", iconRes = R.mipmap.icon_grid_anim_list_view)
 class GuideFragment : BaseFragment() {
@@ -73,7 +75,7 @@ class GuideFragment : BaseFragment() {
         btnTest = view.findViewById<View>(R.id.btn_test) as Button
         btnTest2 = view.findViewById<View>(R.id.btn_test2) as Button
         btnTest3 = view.findViewById<View>(R.id.btn_test3) as Button
-        targets = arrayListOf<View>(btnTest!!, btnTest2!!, btnTest3!!)
+        targets = arrayListOf<View>(btnTest!!, btnTest2!!, btnTest3!!,btnTest3!!)
     }
 
     var targets = arrayListOf<View>()
@@ -134,8 +136,11 @@ class GuideFragment : BaseFragment() {
 
         //guideView?.show()
 
-        guideView3 = EditorGuideView(requireContext())
-        guideView3?.show(targets, arrayListOf(Point(200.toPx(),200.toPx()), Point(400.toPx(), 400.toPx()), Point(600.toPx(), 600.toPx())))
+        //guideView3 = EditorGuideView(requireContext())
+        //guideView3?.show(targets, arrayListOf(Point(200.toPx(),200.toPx()), Point(400.toPx(), 400.toPx()), Point(600.toPx(), 600.toPx())))
+
+
+        museGuideView.show(targets)
     }
 /*
     private fun resetTarget() {

@@ -62,6 +62,12 @@
             android:layout_alignParentEnd="true" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+
+    <com.qmuiteam.qmui.widget.guide.MuseEditorGuideView
+        android:id="@+id/museGuideView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
     <com.qmuiteam.qmui.widget.QMUITopBarLayout
         android:id="@+id/topbar"
         android:layout_width="match_parent"
