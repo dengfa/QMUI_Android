@@ -1,0 +1,11 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.qmuiteam.qmuilint" >
+4
+5    <uses-sdk android:minSdkVersion="14" />
+5-->/Users/dengfa/Demo/QMUI_Android/qmuilint/src/main/AndroidManifest.xml
+6
+7    <application />
+7-->/Users/dengfa/Demo/QMUI_Android/qmuilint/src/main/AndroidManifest.xml:4:5-19
+8
+9</manifest>
