@@ -16,30 +16,23 @@
 
 package com.qmuiteam.qmuidemo.fragment.components;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import com.qmuiteam.qmui.widget.QMUITopBarLayout;
 import com.qmuiteam.qmuidemo.R;
 import com.qmuiteam.qmuidemo.base.BaseFragment;
-import com.qmuiteam.qmuidemo.base.BaseRecyclerAdapter;
-import com.qmuiteam.qmuidemo.base.RecyclerViewHolder;
 import com.qmuiteam.qmuidemo.lib.annotation.Widget;
 import com.qmuiteam.qmuidemo.manager.QDDataManager;
 import com.qmuiteam.qmuidemo.model.QDItemDescription;
 import com.qmuiteam.qmuidemo.view.LeafLoadingView;
-
-import java.util.List;
 import java.util.Random;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Widget(widgetClass = QDAnimationListFragment.class, iconRes = R.mipmap.icon_grid_span)
 public class QDAnimationListFragment extends BaseFragment {
@@ -59,7 +52,7 @@ public class QDAnimationListFragment extends BaseFragment {
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NotNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mHandler.sendEmptyMessageDelayed(REFRESH_PROGRESS, 3000);
     }

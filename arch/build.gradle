@@ -31,6 +31,7 @@ dependencies {
     compileOnly project(':qmui')
     testImplementation "junit:junit:$junitVersion"
     lintChecks project(':lintrule')
+    implementation "com.tencent:mmkv-static:$mmkvVersion"
 }
 
 // deploy
