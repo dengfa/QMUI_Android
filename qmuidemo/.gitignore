@@ -5,3 +5,4 @@ local.properties
 /build
 release.properties
 qmuidemo.keystore
+.gradle/

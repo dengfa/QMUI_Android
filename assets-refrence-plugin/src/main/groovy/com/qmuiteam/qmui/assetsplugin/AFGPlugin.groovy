@@ -42,6 +42,10 @@ class AFGPlugin implements Plugin<Project> {
                 it.absolutePath ==~ /.*android\-\d+.*/ && 'android.jar' == it.name
             }
 
+
+
+
+
 			Task eclipseTask = project.getTasks().findByPath('eclipse')
 			if ( eclipseTask != null ){
 				def sourceOutputDir = new File(project.android.sourceSets.main.java.srcDirs[0].parentFile,'gen')

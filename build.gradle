@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.4.30'
+    ext.kotlin_version = '1.5.20'
     repositories {
         mavenLocal()
         google()
@@ -19,10 +19,10 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.4'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20"
 //        classpath 'com.qmuiteam:skin-maker-plugin:0.0.1'
 
-        classpath 'com.assetsjournalist:assetsplugin:1.0.0'
+        //classpath 'com.assetsjournalist:assetsplugin:1.0.0'
 
         classpath("com.github.utilx:android-assets-journalist:0.11.1")
     }

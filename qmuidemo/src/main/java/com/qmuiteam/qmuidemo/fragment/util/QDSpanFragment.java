@@ -26,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
+import com.github.utilx.AssetFiles;
 import com.qmuiteam.qmui.span.QMUIAlignMiddleImageSpan;
 import com.qmuiteam.qmui.span.QMUIBlockSpaceSpan;
 import com.qmuiteam.qmui.span.QMUICustomTypefaceSpan;
@@ -60,8 +61,7 @@ public class QDSpanFragment extends BaseFragment {
 
     static {
         try {
-            Typeface tmpRmb = Typeface.createFromAsset(QDApplication.getContext().getAssets(),
-                    "fonts/iconfont.ttf");
+            Typeface tmpRmb = Typeface.createFromAsset(QDApplication.getContext().getAssets(), AssetFiles.ASSET_FONTS_ICONFONT_TTF_1546107541);
             TYPEFACE_RMB = Typeface.create(tmpRmb, Typeface.NORMAL);
         } catch (Exception e) {
             e.printStackTrace();
