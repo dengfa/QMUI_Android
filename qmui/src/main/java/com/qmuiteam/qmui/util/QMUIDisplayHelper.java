@@ -49,6 +49,8 @@ import java.util.Locale;
  */
 public class QMUIDisplayHelper {
 
+    public static Context appContext;
+
     /**
      * 屏幕密度,系统源码注释不推荐使用
      */

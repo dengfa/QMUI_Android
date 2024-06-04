@@ -1,4 +1,4 @@
-package com.bytedance.eai.guix.shape
+package com.qmuiteam.qmui.shadow
 
 import android.content.Context
 import android.graphics.Color
@@ -11,7 +11,6 @@ import android.view.View
 import androidx.annotation.ColorInt
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.qmuiteam.qmui.R
-import com.qmuiteam.qmui.shadow.ShadowRoundRectDrawable
 import com.qmuiteam.qmui.shadow.ShadowRoundRectDrawable.Params
 import com.qmuiteam.qmui.shadow.ShapeConst.BOTTOM_LEFT
 import com.qmuiteam.qmui.shadow.ShapeConst.BOTTOM_RIGHT

@@ -1,0 +1,58 @@
+<resources>
+
+    <declare-styleable name="CropImageView">
+        <!--        裁剪的图片缩放样式，这个属性会造成Crash-->
+        <attr name="cropScaleType">
+            <enum name="fitCenter" value="0" />
+            <enum name="center" value="1" />
+            <enum name="centerCrop" value="2" />
+            <enum name="centerInside" value="3" />
+        </attr>
+
+        <!--        裁剪框初始位置水平Padding间距比例-->
+        <attr name="cropInitialHorizonCropWindowPaddingRatio" format="float" />
+        <!--        裁剪框初始位置垂直Padding间距比例-->
+        <attr name="cropInitialVerticalCropWindowPaddingRatio" format="float" />
+
+        <!--        裁剪框边线宽度-->
+        <attr name="cropBorderLineThickness" format="dimension" />
+        <!--        裁剪框边线颜色-->
+        <attr name="unSelectedCropBorderColor" format="color" />
+        <attr name="selectedCropBorderColor" format="color" />
+        <attr name="unSelectedCropBorderSolidColor" format="color" />
+
+        <!--        裁剪框外部区域颜色-->
+        <attr name="cropBackgroundColor" format="color" />
+        <!--        裁剪框自动贴边的距离-->
+        <attr name="cropSnapRadius" format="dimension" />
+        <!--        裁剪框的四个圆角的点的触摸热区距离-->
+        <attr name="cropTouchRadius" format="dimension" />
+        <!--        裁剪框的框的触摸热区距离-->
+        <attr name="cropTouchBorderRadius" format="dimension" />
+
+        <!--        裁剪框最小宽度-->
+        <attr name="cropMinCropWindowWidth" format="dimension" />
+        <!--        裁剪框最小高度-->
+        <attr name="cropMinCropWindowHeight" format="dimension" />
+        <!--        未知-->
+        <attr name="cropMinCropResultWidthPX" format="float" />
+        <!--        未知-->
+        <attr name="cropMinCropResultHeightPX" format="float" />
+        <!--        未知-->
+        <attr name="cropMaxCropResultWidthPX" format="float" />
+        <!--        未知-->
+        <attr name="cropMaxCropResultHeightPX" format="float" />
+        <!--        未知-->
+        <attr name="cropMoveNotRestricted" format="boolean" />
+
+    </declare-styleable>
+
+    <!--覆盖图片上的上下扫描的view-->
+    <declare-styleable name="ScanView">
+        <!--扫描的图片-->
+        <attr name="unit_scan_img" format="reference" />
+        <!--动画时长-->
+        <attr name="anim_duration" format="integer" />
+    </declare-styleable>
+
+</resources>

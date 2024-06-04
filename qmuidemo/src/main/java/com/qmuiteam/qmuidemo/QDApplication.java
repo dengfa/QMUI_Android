@@ -29,6 +29,7 @@ import com.qmuiteam.qmui.ApplicationHolder;
 import com.qmuiteam.qmui.arch.QMUISwipeBackActivityManager;
 import com.qmuiteam.qmui.qqface.QMUIQQFaceCompiler;
 import com.qmuiteam.qmui.skin.QMUISkinMaker;
+import com.qmuiteam.qmui.util.QMUIDisplayHelper;
 import com.qmuiteam.qmuidemo.manager.QDSkinManager;
 import com.qmuiteam.qmuidemo.manager.QDUpgradeManager;
 import com.squareup.leakcanary.LeakCanary;
@@ -53,6 +54,7 @@ public class QDApplication extends Application {
         super.onCreate();
         ApplicationHolder.application = this;
         context = getApplicationContext();
+        QMUIDisplayHelper.appContext = context;
         if (LeakCanary.isInAnalyzerProcess(this)) {
             return;
         }

@@ -18,6 +18,7 @@ package com.qmuiteam.qmuidemo.manager;
 
 import com.qmuiteam.qmuidemo.base.BaseFragment;
 import com.qmuiteam.qmuidemo.fragment.components.HorizontalRefreshFragment;
+import com.qmuiteam.qmuidemo.fragment.components.PhotoCropFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QD3DRotationFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDAnimationListFragment;
 import com.qmuiteam.qmuidemo.fragment.components.QDBottomSheetFragment;
@@ -146,6 +147,7 @@ public class QDDataManager {
         mComponentsNames.add(CalendarFragment.class);
         mComponentsNames.add(RecyclerFragment.class);
         mComponentsNames.add(GuideFragment.class);
+        mComponentsNames.add(PhotoCropFragment.class);
     }
 
     /**
